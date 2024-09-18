@@ -19,3 +19,31 @@ neo_toolbar.neo_toolbar.*:
       sequence:
         type: condition.plugin.[id]
         label: 'Visibility Condition'
+
+neo_toolbar.neo_toolbar_item.*:
+  type: config_entity
+  label: Neo Toolbar Item
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Label
+    uuid:
+      type: string
+    toolbar:
+      type: string
+      label: 'Toolbar'
+    region:
+      type: string
+      label: 'Region'
+    weight:
+      type: integer
+      label: 'Weight'
+    visibility:
+      type: sequence
+      label: 'Visibility Conditions'
+      sequence:
+        type: condition.plugin.[id]
+        label: 'Visibility Condition'

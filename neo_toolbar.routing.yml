@@ -4,7 +4,7 @@ entity.neo_toolbar.collection:
     _entity_list: 'neo_toolbar'
     _title: 'Toolbar configuration'
   requirements:
-    _permission: 'administer toolbar'
+    _permission: 'administer neo_toolbar'
 
 entity.neo_toolbar.add_form:
   path: '/admin/config/neo/toolbar/add'
@@ -12,7 +12,7 @@ entity.neo_toolbar.add_form:
     _entity_form: 'neo_toolbar.add'
     _title: 'Add a toolbar'
   requirements:
-    _permission: 'administer toolbar'
+    _permission: 'administer neo_toolbar'
 
 entity.neo_toolbar.edit_form:
   path: '/admin/config/neo/toolbar/{neo_toolbar}'
@@ -20,7 +20,7 @@ entity.neo_toolbar.edit_form:
     _entity_form: 'neo_toolbar.edit'
     _title: 'Edit a toolbar'
   requirements:
-    _permission: 'administer toolbar'
+    _permission: 'administer neo_toolbar'
 
 entity.neo_toolbar.delete_form:
   path: '/admin/config/neo/toolbar/{neo_toolbar}/delete'
@@ -28,4 +28,36 @@ entity.neo_toolbar.delete_form:
     _entity_form: 'neo_toolbar.delete'
     _title: 'Delete a toolbar'
   requirements:
-    _permission: 'administer toolbar'
+    _permission: 'administer neo_toolbar'
+
+entity.neo_toolbar_item.collection:
+  path: '/admin/structure/neo-toolbar-item'
+  defaults:
+    _entity_list: 'neo_toolbar_item'
+    _title: 'Neo Toolbar Item configuration'
+  requirements:
+    _permission: 'administer neo_toolbar'
+
+entity.neo_toolbar_item.add_form:
+  path: '/admin/structure/neo_toolbar_item/add'
+  defaults:
+    _entity_form: 'neo_toolbar_item.add'
+    _title: 'Add a neo toolbar item'
+  requirements:
+    _permission: 'administer neo_toolbar'
+
+entity.neo_toolbar_item.edit_form:
+  path: '/admin/structure/neo-toolbar-item/{neo_toolbar_item}'
+  defaults:
+    _entity_form: 'neo_toolbar_item.edit'
+    _title: 'Edit a neo toolbar item'
+  requirements:
+    _permission: 'administer neo_toolbar'
+
+entity.neo_toolbar_item.delete_form:
+  path: '/admin/structure/neo-toolbar-item/{neo_toolbar_item}/delete'
+  defaults:
+    _entity_form: 'neo_toolbar_item.delete'
+    _title: 'Delete a neo toolbar item'
+  requirements:
+    _permission: 'administer neo_toolbar'

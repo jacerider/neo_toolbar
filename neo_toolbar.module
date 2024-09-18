@@ -38,8 +38,7 @@ function neo_toolbar_theme(): array {
  * Default template: neo-toolbar.html.twig.
  *
  * @param array $variables
- *   An associative array containing:
- *   - foo: Foo variable description.
+ *   An associative array.
  */
 function template_preprocess_neo_toolbar(array &$variables): void {
 }

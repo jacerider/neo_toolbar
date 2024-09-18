@@ -11,7 +11,7 @@ use Drupal\Core\Render\Element\RenderElementBase;
  * Provides a render element to display a neo toolbar.
  *
  * Properties:
- * - #foo: Property description here.
+ * - #toolbar: The Neo Toolbar entity.
  *
  * Usage Example:
  * @code
