@@ -1,0 +1,4 @@
+services:
+  neo_toolbar.repository:
+    class: Drupal\neo_toolbar\ToolbarRepository
+    arguments: ['@entity_type.manager', '@current_route_match']

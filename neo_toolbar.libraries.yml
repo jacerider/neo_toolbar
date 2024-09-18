@@ -1,0 +1,11 @@
+toolbar:
+  version: VERSION
+  neo: { group: contrib }
+  css:
+    theme:
+      src/css/toolbar.scss: {minified: true}
+  js:
+    src/js/toolbar.ts: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.displace

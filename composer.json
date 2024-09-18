@@ -1,0 +1,22 @@
+{
+  "name": "jacerider/neo_toolbar",
+  "description": "Provides a toolbar that shows the top-level administration menu items and links from other modules.",
+  "type": "drupal-module",
+  "license": "proprietary",
+  "homepage": "https://github.com/jacerider/neo_toolbar",
+  "authors": [
+    {
+      "name": "Cyle Carlson (JaceRider)",
+      "email": "jacerider@gmail.com",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/jacerider/neo_toolbar/issues",
+    "source": "https://github.com/jacerider/neo_toolbar"
+  },
+  "minimum-stability": "dev",
+  "require": {
+    "drupal/core": "^10.3"
+  }
+}

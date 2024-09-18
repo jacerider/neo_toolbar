@@ -1,0 +1,21 @@
+neo_toolbar.neo_toolbar.*:
+  type: config_entity
+  label: Toolbar
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Label
+    uuid:
+      type: string
+    weight:
+      type: integer
+      label: 'Weight'
+    visibility:
+      type: sequence
+      label: 'Visibility Conditions'
+      sequence:
+        type: condition.plugin.[id]
+        label: 'Visibility Condition'

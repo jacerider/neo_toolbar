@@ -1,0 +1,5 @@
+entity.neo_toolbar.add_form:
+  route_name: 'entity.neo_toolbar.add_form'
+  title: 'Add toolbar'
+  appears_on:
+    - entity.neo_toolbar.collection

@@ -1,0 +1,1 @@
+{"version":3,"file":"toolbar.js","sources":["../../src/js/toolbar.ts"],"sourcesContent":["(function (Drupal) {\n\n  Drupal.behaviors.neoToolbar = {\n    attach: () => {\n    }\n  };\n\n})(Drupal);\n\nexport {};\n"],"names":["Drupal"],"mappings":"CAAC,SAAUA,GAAQ;AAEjBA,EAAAA,EAAO,UAAU,aAAa;AAAA,IAC5B,QAAQ,MAAM;AAAA,IACd;AAAA,EAAA;AAGJ,GAAG,MAAM;"}

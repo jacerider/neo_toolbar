@@ -1,0 +1,31 @@
+entity.neo_toolbar.collection:
+  path: '/admin/config/neo/toolbar'
+  defaults:
+    _entity_list: 'neo_toolbar'
+    _title: 'Toolbar configuration'
+  requirements:
+    _permission: 'administer toolbar'
+
+entity.neo_toolbar.add_form:
+  path: '/admin/config/neo/toolbar/add'
+  defaults:
+    _entity_form: 'neo_toolbar.add'
+    _title: 'Add a toolbar'
+  requirements:
+    _permission: 'administer toolbar'
+
+entity.neo_toolbar.edit_form:
+  path: '/admin/config/neo/toolbar/{neo_toolbar}'
+  defaults:
+    _entity_form: 'neo_toolbar.edit'
+    _title: 'Edit a toolbar'
+  requirements:
+    _permission: 'administer toolbar'
+
+entity.neo_toolbar.delete_form:
+  path: '/admin/config/neo/toolbar/{neo_toolbar}/delete'
+  defaults:
+    _entity_form: 'neo_toolbar.delete'
+    _title: 'Delete a toolbar'
+  requirements:
+    _permission: 'administer toolbar'

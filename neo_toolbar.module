@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations and global functions.
+ */
+
+/**
+ * Implements hook_page_top().
+ *
+ * Add toolbar to the top of the page.
+ */
+function neo_toolbar_page_top(array &$page_top) {
+  /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
+  $repository = \Drupal::service('neo_toolbar.repository');
+  if ($toolbar = $repository->getActive()) {
+    $page_top['neo_toolbar'] = [
+      '#type' => 'neo_toolbar',
+      '#toolbar' => $toolbar,
+    ];
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function neo_toolbar_theme(): array {
+  return [
+    'neo_toolbar' => [
+      'variables' => ['toolbar' => NULL],
+    ],
+  ];
+}
+
+/**
+ * Prepares variables for neo-toolbar.html.twig template.
+ *
+ * Default template: neo-toolbar.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - foo: Foo variable description.
+ */
+function template_preprocess_neo_toolbar(array &$variables): void {
+}
