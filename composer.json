@@ -17,6 +17,10 @@
   },
   "minimum-stability": "dev",
   "require": {
-    "drupal/core": "^10.3"
+    "drupal/core": "^10.3",
+    "jacerider/neo_icon": "^1",
+    "jacerider/neo_tooltip": "^1",
+    "jacerider/neo_modal": "^1",
+    "jacerider/neo_image": "^1"
   }
 }

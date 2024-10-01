@@ -38,12 +38,36 @@ neo_toolbar.neo_toolbar_item.*:
     region:
       type: string
       label: 'Region'
+    plugin:
+      type: string
+      label: 'Plugin'
     weight:
       type: integer
       label: 'Weight'
+    settings:
+      type: neo_toolbar_item.settings.[%parent.plugin]
     visibility:
       type: sequence
       label: 'Visibility Conditions'
       sequence:
         type: condition.plugin.[id]
         label: 'Visibility Condition'
+
+neo_toolbar_item.settings.*:
+  type: neo_toolbar_item_settings
+
+neo_toolbar_item_settings:
+  type: mapping
+  label: 'Neo toolbar item settings'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    provider:
+      type: string
+      label: 'Provider'
+    context_mapping:
+      type: sequence
+      label: 'Context assignments'
+      sequence:
+        type: string

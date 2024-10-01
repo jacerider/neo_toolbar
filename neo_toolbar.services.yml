@@ -1,4 +1,20 @@
 services:
+  plugin.manager.neo_toolbar_item:
+    class: Drupal\neo_toolbar\ToolbarItemPluginManager
+    parent: default_plugin_manager
+
+  plugin.manager.neo_toolbar_region:
+    class: Drupal\neo_toolbar\ToolbarRegionPluginManager
+    arguments: ['@module_handler', '@cache.discovery']
+
   neo_toolbar.repository:
     class: Drupal\neo_toolbar\ToolbarRepository
     arguments: ['@entity_type.manager', '@current_route_match']
+
+  neo_toolbar.lazy_builders:
+    class: Drupal\neo_toolbar\LazyBuilders
+    arguments: [ '@entity_type.manager', '@plugin.manager.neo_toolbar_region']
+
+  plugin.manager.neo_toolbar_badge:
+    class: Drupal\neo_toolbar\ToolbarBadgePluginManager
+    parent: default_plugin_manager

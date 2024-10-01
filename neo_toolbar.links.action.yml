@@ -4,8 +4,8 @@ entity.neo_toolbar.add_form:
   appears_on:
     - entity.neo_toolbar.collection
 
-entity.neo_toolbar_item.add_form:
-  route_name: 'entity.neo_toolbar_item.add_form'
-  title: 'Add neo toolbar item'
-  appears_on:
-    - entity.neo_toolbar_item.collection
+# entity.neo_toolbar_item.library:
+#   route_name: 'entity.neo_toolbar_item.library'
+#   title: 'Add neo toolbar item'
+#   appears_on:
+#     - entity.neo_toolbar_item.collection

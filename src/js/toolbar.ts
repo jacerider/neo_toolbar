@@ -1,13 +1,13 @@
-(function (Drupal) {
+(function (Drupal, displace) {
 
   Drupal.behaviors.neoToolbar = {
     attach: () => {
-      if (Drupal.displace) {
-        Drupal.displace(true);
+      if (displace) {
+        displace(true);
       }
     }
   };
 
-})(Drupal);
+})(Drupal, Drupal.displace);
 
 export {};

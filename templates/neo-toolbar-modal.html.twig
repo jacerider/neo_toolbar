@@ -1,0 +1,16 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display neo_toolbar_modal.
+ *
+ * @see template_preprocess_neo_toolbar_modal()
+ *
+ * @ingroup themeable
+ */
+#}
+<div class="neo-toolbar--modal flex flex-col py-4 gap-2">
+  {% if title %}
+    <h2 class=" flex flex-col justify-center min-h-8 mb-3 font-bold px-7">{{ title }}</h2>
+  {% endif %}
+  {{ content }}
+</div>

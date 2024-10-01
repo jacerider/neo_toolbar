@@ -1,0 +1,32 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display neo_toolbar_region.
+ *
+ * Available variables:
+ * - foo: Foo variable description.
+ *
+ * @see template_preprocess_neo_toolbar_region()
+ *
+ * @ingroup themeable
+ */
+#}
+{%
+  set classes = [
+    'flex',
+    alignment == 'vertical' ? 'flex-col',
+    style == 'default' ? 'gap-2',
+    style == 'default' and alignment == 'vertical' ? 'px-2',
+    style == 'pill' ? 'border rounded-xl',
+    style == 'pill' and alignment == 'vertical' ? 'mx-2',
+    style == 'pill_nested' ? 'bg-primary-500',
+    style == 'pill_nested' and alignment == 'horizontal' ? 'items-center justify-center pl-0 pr-1 last:rounded-r-xl',
+    style == 'pill_nested' and alignment == 'vertical' ? 'last:rounded-b-xl p-1 pt-0',
+    style == 'modal' ? 'flex-col gap-2 px-4',
+  ]
+%}
+<div{{ attributes.addClass('neo-toolbar--item', classes) }}>
+  {% block elements %}
+    {{ elements }}
+  {% endblock %}
+</div>

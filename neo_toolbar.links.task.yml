@@ -1,0 +1,9 @@
+entity.neo_toolbar.edit_form:
+  route_name: entity.neo_toolbar.edit_form
+  base_route: entity.neo_toolbar.edit_form
+  title: 'Toolbar'
+
+entity.neo_toolbar_item.collection:
+  route_name: entity.neo_toolbar_item.collection
+  base_route: entity.neo_toolbar.edit_form
+  title: 'Items'

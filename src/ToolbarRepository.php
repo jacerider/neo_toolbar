@@ -56,4 +56,25 @@ final class ToolbarRepository {
     return $this->toolbar;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getToolbarItemsOfType($plugin_type) {
+    $toolbar = $this->getActive();
+    $items = [];
+    foreach ($toolbar->getItems() as $item) {
+      if ($item->getPluginId() == $plugin_type) {
+        $items[] = $item;
+      }
+    }
+    return $items;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasToolbarItemsOfType($plugin_type) {
+    return !empty($this->getToolbarItemsOfType($plugin_type));
+  }
+
 }

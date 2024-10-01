@@ -1,2 +1,4 @@
 administer neo_toolbar:
   title: 'Administer toolbars'
+access neo_toolbar:
+  title: 'Access toolbar'

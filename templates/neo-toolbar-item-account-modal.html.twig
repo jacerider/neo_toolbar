@@ -1,0 +1,19 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display neo_toolbar_item_account_modal.
+ *
+ * @see template_preprocess_neo_toolbar_item_account_modal()
+ *
+ * @ingroup themeable
+ */
+#}
+<div class="flex gap-4 pb-4 mx-4 border-b border-base-200">
+  {% if image %}
+    {{ neo_image_style(image, {cropSides: 1, scale: {width: 80, height: 80}})|neo_class('block rounded-xl') }}
+  {% endif %}
+  <div class="flex flex-col justify-center gap-1">
+    <div class="text-lg font-bold">{{ name }}</div>
+    <div class="text-xs">{{ mail }}</div>
+  </div>
+</div>

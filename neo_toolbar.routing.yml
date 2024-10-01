@@ -2,7 +2,7 @@ entity.neo_toolbar.collection:
   path: '/admin/config/neo/toolbar'
   defaults:
     _entity_list: 'neo_toolbar'
-    _title: 'Toolbar configuration'
+    _title: 'Toolbars'
   requirements:
     _permission: 'administer neo_toolbar'
 
@@ -18,7 +18,7 @@ entity.neo_toolbar.edit_form:
   path: '/admin/config/neo/toolbar/{neo_toolbar}'
   defaults:
     _entity_form: 'neo_toolbar.edit'
-    _title: 'Edit a toolbar'
+    _title_callback: '\Drupal\neo_toolbar\Controller\ToolbarItemListController::titleEdit'
   requirements:
     _permission: 'administer neo_toolbar'
 
@@ -31,18 +31,29 @@ entity.neo_toolbar.delete_form:
     _permission: 'administer neo_toolbar'
 
 entity.neo_toolbar_item.collection:
-  path: '/admin/structure/neo-toolbar-item'
+  path: '/admin/config/neo/toolbar/{neo_toolbar}/items'
   defaults:
-    _entity_list: 'neo_toolbar_item'
-    _title: 'Neo Toolbar Item configuration'
+    # _entity_list: 'neo_toolbar_item'
+    _controller: '\Drupal\neo_toolbar\Controller\ToolbarItemListController'
+    # _title: 'Toolbar Items'
+    _title_callback: '\Drupal\neo_toolbar\Controller\ToolbarItemListController::titleItems'
+  requirements:
+    _permission: 'administer neo_toolbar'
+
+entity.neo_toolbar_item.library:
+  path: '/admin/config/neo/toolbar/{neo_toolbar}/add/{neo_toolbar_region}'
+  defaults:
+    _controller: '\Drupal\neo_toolbar\Controller\ToolbarItemLibraryController'
+    _title: 'Select toolbar item type'
   requirements:
     _permission: 'administer neo_toolbar'
 
 entity.neo_toolbar_item.add_form:
-  path: '/admin/structure/neo_toolbar_item/add'
+  path: '/admin/config/neo/toolbar/{neo_toolbar}/add/{neo_toolbar_region}/{plugin_id}'
   defaults:
-    _entity_form: 'neo_toolbar_item.add'
-    _title: 'Add a neo toolbar item'
+    # _entity_form: 'neo_toolbar_item.add'
+    _controller: '\Drupal\neo_toolbar\Controller\ToolbarItemAddController'
+    _title: 'Add toolbar item'
   requirements:
     _permission: 'administer neo_toolbar'
 
@@ -59,5 +70,14 @@ entity.neo_toolbar_item.delete_form:
   defaults:
     _entity_form: 'neo_toolbar_item.delete'
     _title: 'Delete a neo toolbar item'
+  requirements:
+    _permission: 'administer neo_toolbar'
+
+neo_toolbar.autocomplete:
+  path: '/api/neo/toolbar/autocomplete'
+  defaults:
+    _title: 'URL Autocomplete'
+    _controller: '\Drupal\neo_toolbar\Controller\ToolbarUrlAutocompleteController'
+    _format: json
   requirements:
     _permission: 'administer neo_toolbar'

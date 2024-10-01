@@ -1,0 +1,23 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display neo_toolbar_region.
+ *
+ * Available variables:
+ * - items: The toolbar items.
+ *
+ * @see template_preprocess_neo_toolbar_region()
+ *
+ * @ingroup themeable
+ */
+#}
+{%
+  set classes = [
+    'flex gap-2',
+    alignment == 'horizontal' ? 'items-center justify-center',
+    alignment == 'vertical' ? 'flex-col',
+  ]
+%}
+<div{{ attributes.addClass('neo-toolbar--region', classes) }}>
+  {{ items }}
+</div>

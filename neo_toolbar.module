@@ -5,19 +5,58 @@
  * Hook implementations and global functions.
  */
 
+use Drupal\block\BlockInterface;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Session\AccountInterface;
+
 /**
  * Implements hook_page_top().
  *
  * Add toolbar to the top of the page.
  */
 function neo_toolbar_page_top(array &$page_top) {
+  if (!\Drupal::currentUser()->hasPermission('access neo_toolbar')) {
+    return;
+  }
   /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
   $repository = \Drupal::service('neo_toolbar.repository');
   if ($toolbar = $repository->getActive()) {
     $page_top['neo_toolbar'] = [
       '#type' => 'neo_toolbar',
       '#toolbar' => $toolbar,
+      '#cache' => [
+        'keys' => ['neo_toolbar'],
+        'contexts' => $toolbar->getCacheContexts(),
+        'tags' => $toolbar->getCacheTags(),
+      ],
     ];
+  }
+}
+
+/**
+ * Implements hook_block_access().
+ */
+function neo_toolbar_block_access(BlockInterface $block, $operation, AccountInterface $account) {
+  switch ($block->getPluginId()) {
+    case 'local_actions_block':
+      // Hide local tasks block if user can use the toolbar AND the local tasks
+      // plugin is enabled.
+      /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
+      $repository = \Drupal::service('neo_toolbar.repository');
+      if ($repository->hasToolbarItemsOfType('local_tasks')) {
+        return AccessResult::forbidden();
+      }
+      break;
+
+    case 'local_tasks_block':
+      // Hide local actions block if user can use the toolbar AND the local tasks
+      // plugin is enabled.
+      /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
+      $repository = \Drupal::service('neo_toolbar.repository');
+      if ($repository->hasToolbarItemsOfType('local_actions')) {
+        return AccessResult::forbidden();
+      }
+      break;
   }
 }
 
@@ -27,18 +66,93 @@ function neo_toolbar_page_top(array &$page_top) {
 function neo_toolbar_theme(): array {
   return [
     'neo_toolbar' => [
-      'variables' => ['toolbar' => NULL],
+      'variables' => ['toolbar' => NULL, 'regions' => []],
+    ],
+    'neo_toolbar_region' => [
+      'variables' => ['region' => NULL, 'items' => []],
+    ],
+    'neo_toolbar_item' => [
+      'variables' => [
+        'alignment' => NULL,
+        'style' => 'default',
+        'elements' => [],
+      ],
+    ],
+    'neo_toolbar_item_account_modal' => [
+      'variables' => [
+        'image' => NULL,
+        'name' => NULL,
+        'mail' => NULL,
+      ],
+    ],
+    'neo_toolbar_modal' => [
+      'variables' => [
+        'title' => NULL,
+        'content' => [],
+      ],
+    ],
+    'neo_toolbar_element' => [
+      'variables' => [
+        'id' => NULL,
+        'tag' => NULL,
+        'alignment' => NULL,
+        'style' => 'default',
+        'title' => NULL,
+        'icon' => NULL,
+        'image' => NULL,
+        'badge' => NULL,
+        'url' => NULL,
+        'attributes' => NULL,
+        'badge_attributes' => NULL,
+        'children' => NULL,
+        'after' => NULL,
+        'before' => NULL,
+      ],
+    ],
+    'neo_toolbar_element__divider' => [
+      'base hook' => 'neo_toolbar_element',
     ],
   ];
 }
 
 /**
- * Prepares variables for neo-toolbar.html.twig template.
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function neo_toolbar_theme_suggestions_neo_toolbar_region(array $variables) {
+  $suggestions = [];
+  /** @var \Drupal\neo_toolbar\ToolbarRegionPluginInterface $region */
+  $region = $variables['region'];
+  $suggestions[] = 'neo_toolbar_region__' . $region->getAlignment();
+  return $suggestions;
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function neo_toolbar_theme_suggestions_neo_toolbar_item(array $variables) {
+  $suggestions = [];
+  $suggestions[] = 'neo_toolbar_item__' . $variables['alignment'];
+  return $suggestions;
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function neo_toolbar_theme_suggestions_neo_toolbar_element(array $variables) {
+  $suggestions = [];
+  $suggestions[] = 'neo_toolbar_element__' . $variables['id'];
+  $suggestions[] = 'neo_toolbar_element__' . $variables['id'] . '__' . $variables['alignment'];
+  return $suggestions;
+}
+
+/**
+ * Prepares variables for neo-toolbar-region.html.twig template.
  *
- * Default template: neo-toolbar.html.twig.
+ * Default template: neo-toolbar-region.html.twig.
  *
  * @param array $variables
  *   An associative array.
  */
-function template_preprocess_neo_toolbar(array &$variables): void {
+function template_preprocess_neo_toolbar_region(array &$variables): void {
+  $variables['alignment'] = $variables['region']->getAlignment();
 }

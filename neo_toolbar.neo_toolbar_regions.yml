@@ -1,0 +1,20 @@
+item:
+  deriver: 'Drupal\neo_toolbar\Plugin\Derivative\ToolbarRegion'
+  alignment: horizontal
+  weight: 100
+top_start:
+  label: 'Top Start'
+  alignment: horizontal
+  weight: 1
+top_end:
+  label: 'Top End'
+  alignment: horizontal
+  weight: 2
+side_start:
+  label: 'Sidebar Start'
+  alignment: vertical
+  weight: 3
+side_end:
+  label: 'Sidebar End'
+  alignment: vertical
+  weight: 4

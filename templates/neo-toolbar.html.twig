@@ -11,6 +11,35 @@
  * @ingroup themeable
  */
 #}
-<div class="neo-toolbar fixed top-0 bottom-0 left-0 w-14 bg-base-200" data-offset-left="">
-  Toolbar: {{ toolbar.id }}
-</div>
+{% if regions.top_start or regions.top_end %}
+  <aside class="neo-toolbar neo-toolbar--top flex fixed top-0 right-0 left-displace-l h-14 border-b border-base-200 bg-base-0 text-base-content-0 z-50 scheme-dark" data-offset-top="">
+     <div class="flex gap-2 px-2 items-center grow">
+      {% if regions.top_start %}
+        <div class="neo-toolbar--region-wrap">
+          {{ regions.top_start}}
+        </div>
+      {% endif %}
+      {% if regions.top_end %}
+        <div class="neo-toolbar--region-wrap ml-auto">
+          {{ regions.top_end}}
+        </div>
+      {% endif %}
+    </div>
+  </aside>
+{% endif %}
+{% if regions.side_start or regions.side_end %}
+  <aside class="neo-toolbar neo-toolbar--side flex fixed top-0 h-lvh left-0 w-16 border-r border-base-200 bg-base-0 text-base-content-0 z-50" data-offset-left="">
+     <div class="flex gap-2 py-2 flex-col grow">
+      {% if regions.side_start %}
+        <div class="neo-toolbar--region-wrap">
+          {{ regions.side_start}}
+        </div>
+      {% endif %}
+      {% if regions.side_end %}
+        <div class="neo-toolbar--region-wrap mt-auto pt-2 border-t border-base-200">
+          {{ regions.side_end}}
+        </div>
+      {% endif %}
+    </div>
+  </aside>
+{% endif %}

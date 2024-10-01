@@ -1,0 +1,91 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display neo_toolbar_region.
+ *
+ * Available variables:
+ * - foo: Foo variable description.
+ *
+ * @see template_preprocess_neo_toolbar_region()
+ *
+ * @ingroup themeable
+ */
+#}
+{%
+  set classes = [
+    'flex',
+    'gap-2',
+    'grow',
+    'transition',
+    'border-2',
+    image ? 'border-base-200' : 'border-transparent',
+    'overflow-hidden',
+    'color:hover:bg-base-800 color:hover:border-base-800',
+    'focus:outline-none focus:ring focus:ring-primary focus:ring-offset-2 focus:z-10',
+    alignment == 'horizontal' ? 'px-3',
+    style == 'default' ? 'items-center justify-center rounded-xl bg-base-0 text-base-content-200 hover:bg-base-100 hover:text-base-content-100 hover:border-primary-500 is-active:bg-base-200 is-active:text-base-content-200 is-active:border-primary-500',
+    style == 'default' and alignment == 'horizontal' ? 'h-10',
+    style == 'default' and alignment == 'vertical' ? 'h-12 w-12',
+    style == 'pill' ? 'items-center justify-center bg-base-200 text-base-content-200 h-10 hover:bg-base-100 hover:text-base-content-100 hover:border-primary-500 is-active:bg-primary-500 is-active:border-primary-500 is-active:text-primary-content-500',
+    style == 'pill' and alignment == 'horizontal' ? 'first:rounded-l-xl last:rounded-r-xl',
+    style == 'pill' and alignment == 'vertical' ? 'first:rounded-t-xl last:rounded-b-xl',
+    style == 'pill_nested' ? 'items-center justify-center bg-primary-400 text-primary-content-400 h-8 text-sm hover:border-primary-800 hover:text-primary-content-400 is-active:bg-primary-800 is-active:border-primary-800 is-active:text-primary-content-800',
+    style == 'pill_nested' and alignment == 'horizontal' ? 'first:rounded-l-lg last:rounded-r-lg',
+    style == 'pill_nested' and alignment == 'vertical' ? 'first:rounded-t-lg last:rounded-b-lg',
+    style == 'modal' ? 'items-center rounded-xl bg-base-0 text-base-content-200 hover:bg-base-100 hover:text-base-content-100 hover:border-primary-500 is-active:bg-primary-500 is-active:border-primary-500 is-active:text-primary-content-500 h-10',
+    image ? 'is-active:bg-base-500',
+  ]
+%}
+{% set title_attributes = create_attribute() %}
+{%
+  set title_classes = [
+    alignment == 'horizontal' and style != 'modal' ? 'text-xs',
+  ]
+%}
+{% set image_attributes = create_attribute() %}
+{%
+  set image_classes = image_classes is defined ? image_classes : [
+    alignment == 'horizontal' ? 'block h-full w-auto -ml-3 rounded-r-lg',
+    alignment == 'vertical' ? 'block',
+  ]
+%}
+{%
+  set image_size = image_size is defined ? image_size : {
+    width: alignment == 'vertical' ? 50 : 40,
+    height: alignment == 'vertical' ? 50 : 40,
+  }
+%}
+{% set icon_attributes = create_attribute() %}
+{%
+  set icon_classes = icon_classes is defined ? icon_classes : [
+    alignment == 'vertical' ? 'text-lg',
+  ]
+%}
+{%
+  set badge_classes = badge_classes is defined ? badge_classes : [
+    'absolute top-px right-px text-[10px] bg-primary-500 text-primary-content-500 rounded-2xl text-center px-1 py-px min-w-4',
+    badge_scheme,
+  ]
+%}
+{{ before }}
+<{{ tag }}{{ attributes.addClass('neo-toolbar--element relative', classes) }}>
+  {% if badge %}
+    <div{{ badge_attributes.addClass(badge_classes) }}>{{ badge }}</div>
+  {% endif %}
+  {% if image %}
+    {% block image %}
+      {{ neo_image_style(image, {cropSides: 1, scale: image_size})|neo_class(image_classes) }}
+    {% endblock %}
+  {% elseif icon %}
+    {% block icon %}
+      {{ icon(icon)|neo_class(icon_classes) }}
+    {% endblock %}
+  {% endif %}
+  {% if title %}
+    {% block title %}
+      <span{{ title_attributes.addClass(title_classes) }}>{{ title }}</span>
+    {% endblock %}
+  {% endif %}
+</{{ tag }}>
+{{ after }}
+{{ children }}

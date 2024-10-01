@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\neo_toolbar\Element;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Render\Attribute\RenderElement;
 use Drupal\Core\Render\Element\RenderElementBase;
 
@@ -46,7 +47,28 @@ final class Toolbar extends RenderElementBase {
    *   The modified element.
    */
   public static function preRenderToolbar(array $element): array {
+    /** @var \Drupal\neo_toolbar\ToolbarInterface $toolbar */
+    $toolbar = $element['#toolbar'];
+    $cacheableMetadata = new CacheableMetadata();
+    $cacheableMetadata->addCacheableDependency($toolbar);
     $element['#attached']['library'][] = 'neo_toolbar/toolbar';
+    foreach ($toolbar->getRegions() as $regionId => $region) {
+      $regionCacheableMetadata = new CacheableMetadata();
+      $regionCacheableMetadata->addCacheableDependency($toolbar);
+      $items = $toolbar->getItems($regionId, $regionCacheableMetadata);
+      if ($items) {
+        $element['#regions'][$regionId] = [
+          '#lazy_builder' => [
+            'neo_toolbar.lazy_builders:renderToolbarRegion',
+            [$toolbar->id(), $regionId, $toolbar->isEditMode()],
+          ],
+          '#cache' => [
+            'keys' => ['neo_toolbar', 'region', $regionId],
+          ],
+        ];
+        $regionCacheableMetadata->applyTo($element['#regions'][$regionId]);
+      }
+    }
     return $element;
   }
 

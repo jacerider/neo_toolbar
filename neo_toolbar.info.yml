@@ -4,3 +4,8 @@ description: 'Provides a toolbar that shows the top-level administration menu it
 package: Neo
 version: 0.0.0
 core_version_requirement: ^10.3 || ^11
+dependencies:
+  - neo_icon:neo_icon
+  - neo_modal:neo_modal
+  - neo_tooltip:neo_tooltip
+  - neo_image:neo_image

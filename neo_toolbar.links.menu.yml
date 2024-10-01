@@ -4,8 +4,8 @@ entity.neo_toolbar.overview:
   description: 'List of toolbars to extend site functionality.'
   route_name: entity.neo_toolbar.collection
 
-entity.neo_toolbar_item.overview:
-  title: Neo Toolbar Items
-  parent: system.admin_structure
-  description: 'List of neo toolbar items to extend site functionality.'
-  route_name: entity.neo_toolbar_item.collection
+# entity.neo_toolbar_item.overview:
+#   title: Neo Toolbar Items
+#   parent: system.admin_structure
+#   description: 'List of neo toolbar items to extend site functionality.'
+#   route_name: entity.neo_toolbar_item.collection
