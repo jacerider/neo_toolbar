@@ -43,7 +43,7 @@ function neo_toolbar_block_access(BlockInterface $block, $operation, AccountInte
       // plugin is enabled.
       /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
       $repository = \Drupal::service('neo_toolbar.repository');
-      if ($repository->hasToolbarItemsOfType('local_tasks')) {
+      if ($repository->hasToolbarItemsOfType('local_actions')) {
         return AccessResult::forbidden();
       }
       break;
@@ -53,7 +53,7 @@ function neo_toolbar_block_access(BlockInterface $block, $operation, AccountInte
       // plugin is enabled.
       /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
       $repository = \Drupal::service('neo_toolbar.repository');
-      if ($repository->hasToolbarItemsOfType('local_actions')) {
+      if ($repository->hasToolbarItemsOfType('local_tasks')) {
         return AccessResult::forbidden();
       }
       break;
