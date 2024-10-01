@@ -1,0 +1,22 @@
+uuid: bc9c5ed0-aebc-49ff-975e-60437b91bdd1
+langcode: en
+status: true
+dependencies:
+  config:
+    - neo_toolbar.neo_toolbar.default
+    - neo_toolbar.neo_toolbar_item.user
+id: link_4
+label: Logout
+toolbar: default
+region: 'item:user'
+plugin: link
+weight: 0
+settings:
+  url: 'internal:/user/logout'
+  token:
+    tokens: ''
+  target: 0
+  icon: sign-out-alt
+  badge:
+    type: ''
+visibility: {  }

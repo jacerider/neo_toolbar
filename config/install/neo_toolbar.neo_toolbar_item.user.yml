@@ -1,0 +1,14 @@
+uuid: f366d090-11dc-4cb1-83f8-6f065147d18b
+langcode: en
+status: true
+dependencies:
+  config:
+    - neo_toolbar.neo_toolbar.default
+id: user
+label: User
+toolbar: default
+region: side_end
+plugin: user
+weight: 0
+settings: null
+visibility: {  }

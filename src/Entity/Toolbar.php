@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\neo_toolbar\Entity;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
@@ -133,8 +134,13 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
       $items = array_filter($this->items, fn($item) => $item->getRegionId() === $regionId);
     }
     $items = array_filter($items, function ($item) use ($cacheableMetadata) {
-      /** @var \Drupal\neo_toolbar\ToolbarItemInterface $item */
-      $access = $item->access('view', NULL, TRUE);
+      if ($item->getElementCollection()->isEmpty()) {
+        $access = AccessResult::forbidden('Item has no elements.');
+      }
+      else {
+        /** @var \Drupal\neo_toolbar\ToolbarItemInterface $item */
+        $access = $item->access('view', NULL, TRUE);
+      }
       if ($cacheableMetadata) {
         $cacheableMetadata->addCacheableDependency($item);
         $cacheableMetadata->addCacheableDependency($access);
@@ -184,10 +190,12 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
       /** @var \Drupal\neo_toolbar\ToolbarRegionPluginManager $regionManager */
       $regionManager = \Drupal::service('plugin.manager.neo_toolbar_region');
       $configurations = [];
-      foreach ($regionManager->getDefinitionForToolbar($this->id()) as $pluginId => $definition) {
-        $configurations[$pluginId] = [
-          'id' => $pluginId,
-        ];
+      if ($id = $this->id()) {
+        foreach ($regionManager->getDefinitionForToolbar($id) as $pluginId => $definition) {
+          $configurations[$pluginId] = [
+            'id' => $pluginId,
+          ];
+        }
       }
       $this->regionCollection = new DefaultLazyPluginCollection($regionManager, $configurations);
     }

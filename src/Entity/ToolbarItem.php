@@ -211,7 +211,7 @@ final class ToolbarItem extends ConfigEntityBase implements ToolbarItemInterface
    */
   public function getElementCollection() {
     if (!$this->elementCollection) {
-      $this->elementCollection = new ToolbarItemCollection($this->getRegion()->getAlignment(), $this->getPlugin()->getStyle());
+      $this->elementCollection = new ToolbarItemCollection($this->getRegion()->getAlignment(), $this->getPlugin()->getStyle(), $this->getWeight());
       foreach ($this->getPlugin()->getElements() as $element) {
         if ($element instanceof ToolbarItemElement) {
           $this->elementCollection->add($element);

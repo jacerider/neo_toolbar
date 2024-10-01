@@ -1,0 +1,22 @@
+uuid: 530d33d7-aeaa-4cba-aa55-a6fb448a9afd
+langcode: en
+status: true
+dependencies:
+  config:
+    - neo_toolbar.neo_toolbar.default
+    - neo_toolbar.neo_toolbar_item.user
+id: link_3
+label: 'View Profile'
+toolbar: default
+region: 'item:user'
+plugin: link
+weight: -2
+settings:
+  url: 'internal:/user'
+  token:
+    tokens: ''
+  target: 0
+  icon: user-circle
+  badge:
+    type: ''
+visibility: {  }

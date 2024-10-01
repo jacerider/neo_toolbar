@@ -60,11 +60,12 @@ final class ToolbarRepository {
    * {@inheritdoc}
    */
   public function getToolbarItemsOfType($plugin_type) {
-    $toolbar = $this->getActive();
     $items = [];
-    foreach ($toolbar->getItems() as $item) {
-      if ($item->getPluginId() == $plugin_type) {
-        $items[] = $item;
+    if ($toolbar = $this->getActive()) {
+      foreach ($toolbar->getItems() as $item) {
+        if ($item->getPluginId() == $plugin_type) {
+          $items[] = $item;
+        }
       }
     }
     return $items;

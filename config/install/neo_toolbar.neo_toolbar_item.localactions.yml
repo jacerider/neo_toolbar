@@ -1,0 +1,14 @@
+uuid: 94ca9749-3a46-416f-865d-f3f858b90eef
+langcode: en
+status: true
+dependencies:
+  config:
+    - neo_toolbar.neo_toolbar.default
+id: localactions
+label: 'Local Actions'
+toolbar: default
+region: top_start
+plugin: local_actions
+weight: 0
+settings: null
+visibility: {  }

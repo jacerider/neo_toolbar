@@ -1,0 +1,14 @@
+uuid: 02dc3c5f-ee94-4e07-a565-6e698647bb17
+langcode: en
+status: true
+dependencies:
+  config:
+    - neo_toolbar.neo_toolbar.default
+id: localtasks
+label: 'Local Tasks'
+toolbar: default
+region: top_end
+plugin: local_tasks
+weight: 0
+settings: null
+visibility: {  }

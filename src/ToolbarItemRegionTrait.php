@@ -26,7 +26,7 @@ trait ToolbarItemRegionTrait {
    */
   public function processRegionElementAsModal(ToolbarItemElement $element, mixed $title = NULL, array $build = []) {
     $modalCollections = $this->getRegionElementCollections();
-    if (!empty($modalCollections)) {
+    if (!empty($modalCollections) || !empty($build)) {
       $modalBuild = [];
       foreach ($modalCollections as $collection) {
         $modalBuild[] = $collection->toRenderable();

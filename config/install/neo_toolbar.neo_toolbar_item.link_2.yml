@@ -1,0 +1,21 @@
+uuid: 2213c5e0-235f-4096-851b-54a2df88b5f0
+langcode: en
+status: true
+dependencies:
+  config:
+    - neo_toolbar.neo_toolbar.default
+id: link_2
+label: 'User Accounts'
+toolbar: default
+region: side_start
+plugin: link
+weight: 0
+settings:
+  url: 'internal:/admin/people'
+  token:
+    tokens: ''
+  target: 0
+  icon: user-lock
+  badge:
+    type: ''
+visibility: {  }

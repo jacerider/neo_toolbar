@@ -1,0 +1,21 @@
+uuid: fbb8e3fc-f732-4be4-8ca2-423b9cf447da
+langcode: en
+status: true
+dependencies:
+  config:
+    - neo_toolbar.neo_toolbar.default
+id: link
+label: Content
+toolbar: default
+region: side_start
+plugin: link
+weight: -1
+settings:
+  url: 'internal:/admin/content'
+  token:
+    tokens: ''
+  target: 0
+  icon: file-alt
+  badge:
+    type: ''
+visibility: {  }

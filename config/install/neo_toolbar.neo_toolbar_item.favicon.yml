@@ -1,0 +1,20 @@
+uuid: 4d500c2c-5c56-4689-862c-f2d2fb215fbb
+langcode: en
+status: true
+dependencies:
+  config:
+    - neo_toolbar.neo_toolbar.default
+  module:
+    - neo_favicon
+id: favicon
+label: Home
+toolbar: default
+region: side_start
+plugin: favicon
+weight: -2
+settings:
+  url: 'internal:/'
+  target: 0
+  image: 'public://neo-favicon/mstile-150x150.png'
+  scheme: scheme-primary-solid
+visibility: {  }

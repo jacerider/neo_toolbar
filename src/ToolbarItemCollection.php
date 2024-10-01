@@ -29,6 +29,13 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
   protected $style;
 
   /**
+   * The toolbar item element weight.
+   *
+   * @var int
+   */
+  protected $weight;
+
+  /**
    * The toolbar items.
    *
    * @var \Drupal\neo_toolbar\ToolbarItemElement[]
@@ -42,10 +49,13 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
    *   The toolbar item element alignment.
    * @param string $style
    *   The toolbar item element style.
+   * @param int $weight
+   *   The toolbar item element weight.
    */
-  public function __construct($alignment, string $style = 'default') {
+  public function __construct($alignment, string $style = 'default', int $weight = 0) {
     $this->alignment = $alignment;
     $this->style = Str::snake($style);
+    $this->weight = $weight;
   }
 
   /**
@@ -79,6 +89,16 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
    */
   public function getStyle(): string {
     return $this->style;
+  }
+
+  /**
+   * Get the toolbar item element weight.
+   *
+   * @return int
+   *   The toolbar item element weight.
+   */
+  public function getWeight(): int {
+    return $this->weight;
   }
 
   /**
@@ -121,6 +141,16 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
   }
 
   /**
+   * Checks if the collection is empty.
+   *
+   * @return bool
+   *   TRUE if the collection is empty, FALSE otherwise.
+   */
+  public function isEmpty(): bool {
+    return empty($this->elements);
+  }
+
+  /**
    * Get render array.
    *
    * @return array
@@ -134,6 +164,7 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
         '#theme' => 'neo_toolbar_item',
         '#alignment' => $this->getAlignment(),
         '#style' => $style,
+        '#weight' => $this->getWeight(),
       ];
       foreach ($this->elements as $element) {
         $element->setStyle($style);

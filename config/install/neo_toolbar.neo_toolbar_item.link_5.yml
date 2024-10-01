@@ -1,0 +1,22 @@
+uuid: 58ad48fd-4394-44a2-a58f-5fab48cd7521
+langcode: en
+status: true
+dependencies:
+  config:
+    - neo_toolbar.neo_toolbar.default
+    - neo_toolbar.neo_toolbar_item.user
+id: link_5
+label: 'Manage Account'
+toolbar: default
+region: 'item:user'
+plugin: link
+weight: -1
+settings:
+  url: 'internal:/user/[user:uid]/edit'
+  token:
+    tokens: ''
+  target: 0
+  icon: user-cog
+  badge:
+    type: ''
+visibility: {  }
