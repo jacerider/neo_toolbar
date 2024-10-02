@@ -134,13 +134,7 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
       $items = array_filter($this->items, fn($item) => $item->getRegionId() === $regionId);
     }
     $items = array_filter($items, function ($item) use ($cacheableMetadata) {
-      if ($item->getElementCollection()->isEmpty()) {
-        $access = AccessResult::forbidden('Item has no elements.');
-      }
-      else {
-        /** @var \Drupal\neo_toolbar\ToolbarItemInterface $item */
-        $access = $item->access('view', NULL, TRUE);
-      }
+      $access = $item->access('view', NULL, TRUE);
       if ($cacheableMetadata) {
         $cacheableMetadata->addCacheableDependency($item);
         $cacheableMetadata->addCacheableDependency($access);

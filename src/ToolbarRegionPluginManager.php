@@ -35,6 +35,7 @@ final class ToolbarRegionPluginManager extends DefaultPluginManager {
     'id' => '',
     'label' => '',
     'alignment' => 'vertical',
+    'position' => 'start',
     'toolbar' => NULL,
     'toolbar_item' => NULL,
     'weight' => 0,

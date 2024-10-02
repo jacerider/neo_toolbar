@@ -5,16 +5,20 @@ item:
 top_start:
   label: 'Top Start'
   alignment: horizontal
+  position: start
   weight: 1
 top_end:
   label: 'Top End'
   alignment: horizontal
+  position: end
   weight: 2
 side_start:
   label: 'Sidebar Start'
   alignment: vertical
+  position: start
   weight: 3
 side_end:
   label: 'Sidebar End'
   alignment: vertical
+  position: end
   weight: 4

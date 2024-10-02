@@ -155,4 +155,5 @@ function neo_toolbar_theme_suggestions_neo_toolbar_element(array $variables) {
  */
 function template_preprocess_neo_toolbar_region(array &$variables): void {
   $variables['alignment'] = $variables['region']->getAlignment();
+  $variables['position'] = $variables['region']->getPosition();
 }

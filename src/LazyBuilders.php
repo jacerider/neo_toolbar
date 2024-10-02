@@ -38,10 +38,7 @@ final class LazyBuilders implements TrustedCallbackInterface {
     $items = $items = $toolbar->getItems($regionId, $cacheableMetadata);
     if ($items) {
       $region = $this->regionPluginManager->createInstance($regionId);
-      $build = [
-        '#theme' => 'neo_toolbar_region',
-        '#region' => $region,
-      ];
+      $build = [];
       foreach ($items as $item) {
         $collection = $item->getElementCollection();
         // @todo See if we can avoid merging both the plugin and the collection
@@ -49,7 +46,16 @@ final class LazyBuilders implements TrustedCallbackInterface {
         $cacheableMetadata->addCacheableDependency($item);
         $cacheableMetadata->addCacheableDependency($item->getPlugin());
         $cacheableMetadata->addCacheableDependency($collection);
+        if ($collection->isEmpty()) {
+          continue;
+        }
         $build['#items'][$item->id()] = $collection->toRenderable();
+      }
+      if (!empty($build['#items'])) {
+        $build = [
+          '#theme' => 'neo_toolbar_region',
+          '#region' => $region,
+        ] + $build;
       }
     }
     $cacheableMetadata->applyTo($build);

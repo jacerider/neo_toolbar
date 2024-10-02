@@ -13,9 +13,12 @@
 #}
 {%
   set classes = [
-    'flex gap-2',
-    alignment == 'horizontal' ? 'items-center justify-center',
-    alignment == 'vertical' ? 'flex-col',
+    'flex gap-2 border-base-200 first:grow',
+    alignment == 'horizontal' ? 'h-14 border-b items-center pl-2 last:pr-2',
+    alignment == 'vertical' ? 'w-16 border-r flex-col pt-2 last:pb-2',
+    position == 'start' ? 'justify-start',
+    position == 'end' ? 'justify-end',
+    alignment == 'vertical' and position == 'end' ? 'border-t',
   ]
 %}
 <div{{ attributes.addClass('neo-toolbar--region', classes) }}>

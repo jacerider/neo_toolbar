@@ -29,6 +29,13 @@ final class ToolbarRegionPluginDefault extends PluginBase implements ToolbarRegi
   /**
    * {@inheritdoc}
    */
+  public function getPosition(): string {
+    return $this->pluginDefinition['position'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getToolbarId(): string|null {
     return $this->pluginDefinition['toolbar'];
   }
