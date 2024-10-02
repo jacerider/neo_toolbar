@@ -200,6 +200,7 @@ final class ToolbarItemListBuilder extends ConfigEntityListBuilder implements Fo
       $weightDelta = round(count($items) / 2);
       $table = [
         '#type' => 'table',
+        '#sticky' => TRUE,
         '#header' => [
           $this->t('Name'),
           $this->t('Category'),
