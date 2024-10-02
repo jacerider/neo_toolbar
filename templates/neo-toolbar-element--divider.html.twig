@@ -11,6 +11,13 @@
  * @ingroup themeable
  */
 #}
+{% set divider_attributes = create_attribute() %}
+{%
+  set divider_classes = divider_classes is defined ? divider_classes : [
+    'border-t border-base-200 dark:border-base-300',
+    alignment == 'vertical' ? 'mx-3 border-t' : 'h-6 border-l',
+  ]
+%}
 <div{{ attributes.addClass('neo-toolbar--divider') }}>
-  <hr class="border-t border-base-200 mx-3">
+  <hr{{ divider_attributes.addClass(divider_classes) }}>
 </div>
