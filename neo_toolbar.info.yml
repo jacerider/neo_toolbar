@@ -2,7 +2,7 @@ name: Neo | Toolbar
 type: module
 description: 'Provides a toolbar that shows the top-level administration menu items and links from other modules.'
 package: Neo
-version: 0.0.0
+version: 1.0.2
 core_version_requirement: ^10.3 || ^11
 dependencies:
   - neo_icon:neo_icon
