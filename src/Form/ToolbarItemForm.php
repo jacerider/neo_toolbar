@@ -146,6 +146,13 @@ final class ToolbarItemForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state): int {
+    if ($this->entity->isNew()) {
+      $weight = 0;
+      foreach ($this->entity->getToolbar()->getItems() as $item) {
+        $weight = max($weight, $item->getWeight() + 1);
+      }
+      $this->entity->set('weight', $weight);
+    }
     $result = parent::save($form, $form_state);
     $message_args = ['%label' => $this->entity->label()];
     $this->messenger()->addStatus(
