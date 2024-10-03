@@ -270,7 +270,7 @@ final class ToolbarItemListBuilder extends ConfigEntityListBuilder implements Fo
 
     $form['add'] = [
       '#type' => 'link',
-      '#title' => $this->t('Place item in the %name', ['%name' => $region->label()]),
+      '#title' => $this->icon($this->t('Place item in the %name', ['%name' => $region->label()]), NULL, NULL, ['admin']),
       '#url' => Url::fromRoute('entity.neo_toolbar_item.library', [
         'neo_toolbar' => $this->toolbar->id(),
         'neo_toolbar_region' => $regionId,
