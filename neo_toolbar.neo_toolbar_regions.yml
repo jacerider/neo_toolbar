@@ -22,3 +22,5 @@ side_end:
   alignment: vertical
   position: end
   weight: 4
+broken:
+  label: 'Broken'

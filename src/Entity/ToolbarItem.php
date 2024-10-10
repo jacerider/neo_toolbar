@@ -146,7 +146,9 @@ final class ToolbarItem extends ConfigEntityBase implements ToolbarItemInterface
    * {@inheritdoc}
    */
   public function getRegion(): ToolbarRegionPluginInterface {
-    return \Drupal::service('plugin.manager.neo_toolbar_region')->createInstance($this->getRegionId());
+    /** @var \Drupal\neo_toolbar\ToolbarRegionPluginManager $service */
+    $service = \Drupal::service('plugin.manager.neo_toolbar_region');
+    return $service->createInstance($this->getRegionId());
   }
 
   /**

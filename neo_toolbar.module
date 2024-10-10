@@ -37,6 +37,9 @@ function neo_toolbar_page_top(array &$page_top) {
  * Implements hook_block_access().
  */
 function neo_toolbar_block_access(BlockInterface $block, $operation, AccountInterface $account) {
+  if (!\Drupal::currentUser()->hasPermission('access neo_toolbar')) {
+    return;
+  }
   switch ($block->getPluginId()) {
     case 'local_actions_block':
       // Hide local tasks block if user can use the toolbar AND the local tasks

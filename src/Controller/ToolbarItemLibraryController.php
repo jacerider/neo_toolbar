@@ -78,6 +78,8 @@ final class ToolbarItemLibraryController extends ControllerBase {
         ],
       ];
       $row['category']['data'] = $plugin_definition['category'];
+
+      $links = [];
       $links['add'] = [
         'title' => $this->t('Place item'),
         'url' => Url::fromRoute('entity.neo_toolbar_item.add_form', [

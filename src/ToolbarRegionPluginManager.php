@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\neo_toolbar;
 
+use Drupal\Component\Plugin\FallbackPluginManagerInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
@@ -26,7 +27,7 @@ use Drupal\Core\Plugin\Factory\ContainerFactory;
  * @see \Drupal\neo_toolbar\ToolbarRegionDefault
  * @see \Drupal\neo_toolbar\ToolbarRegionInterface
  */
-final class ToolbarRegionPluginManager extends DefaultPluginManager {
+final class ToolbarRegionPluginManager extends DefaultPluginManager implements FallbackPluginManagerInterface {
 
   /**
    * {@inheritdoc}
@@ -74,13 +75,20 @@ final class ToolbarRegionPluginManager extends DefaultPluginManager {
   /**
    * {@inheritdoc}
    */
-  public function getDefinitions($show_hidden = TRUE) {
+  public function getDefinitions() {
     $definitions = parent::getDefinitions();
     uasort($definitions, [
       'Drupal\Component\Utility\SortArray',
       'sortByWeightElement',
     ]);
     return $definitions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFallbackPluginId($plugin_id, array $configuration = []) {
+    return 'broken';
   }
 
   /**
@@ -97,6 +105,8 @@ final class ToolbarRegionPluginManager extends DefaultPluginManager {
     $definitions = array_filter($definitions, function ($definition) use ($toolbarId) {
       return empty($definition['toolbar']) || $definition['toolbar'] === $toolbarId;
     });
+    // Do not display the 'broken' plugin in the UI.
+    unset($definitions['broken']);
     return $definitions;
   }
 

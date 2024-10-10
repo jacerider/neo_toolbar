@@ -51,7 +51,6 @@ entity.neo_toolbar_item.library:
 entity.neo_toolbar_item.add_form:
   path: '/admin/config/neo/toolbar/{neo_toolbar}/add/{neo_toolbar_region}/{plugin_id}'
   defaults:
-    # _entity_form: 'neo_toolbar_item.add'
     _controller: '\Drupal\neo_toolbar\Controller\ToolbarItemAddController'
     _title: 'Add toolbar item'
   requirements:

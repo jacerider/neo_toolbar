@@ -168,7 +168,7 @@ final class ToolbarItemForm extends EntityForm {
   }
 
   /**
-   * Generates a unique machine name for a block.
+   * Generates a unique machine name for a toolbar item.
    *
    * @param \Drupal\neo_toolbar\ToolbarItemInterface $item
    *   The item entity.
