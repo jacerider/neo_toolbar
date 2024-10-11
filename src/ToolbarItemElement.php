@@ -112,6 +112,27 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   protected $attributes;
 
   /**
+   * The toolbar item element title attributes.
+   *
+   * @var \Drupal\Core\Template\Attribute
+   */
+  protected $titleAttributes;
+
+  /**
+   * The toolbar item element icon attributes.
+   *
+   * @var \Drupal\Core\Template\Attribute
+   */
+  protected $iconAttributes;
+
+  /**
+   * The toolbar item element image attributes.
+   *
+   * @var \Drupal\Core\Template\Attribute
+   */
+  protected $imageAttributes;
+
+  /**
    * The toolbar item element badge attributes.
    *
    * @var \Drupal\Core\Template\Attribute
@@ -154,6 +175,9 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
     $this->title = $title;
     $this->setAlignment($alignment);
     $this->attributes = new Attribute();
+    $this->titleAttributes = new Attribute();
+    $this->iconAttributes = new Attribute();
+    $this->imageAttributes = new Attribute();
     $this->badgeAttributes = new Attribute();
   }
 
@@ -455,6 +479,147 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   }
 
   /**
+   * Add a class to the toolbar item element title attributes.
+   *
+   * @param string|array ...
+   *   CSS classes to add to the class attribute array.
+   *
+   * @return $this
+   */
+  public function addTitleClass(): self {
+    $args = func_get_args();
+    if ($args) {
+      $this->titleAttributes->addClass($args);
+    }
+    return $this;
+  }
+
+  /**
+   * Set an attribute to the toolbar item element title attributes.
+   *
+   * @param string $key
+   *   The attribute key.
+   * @param string $value
+   *   The attribute value.
+   *
+   * @return $this
+   */
+  public function setTitleAttribute(string $key, string $value): self {
+    $this->titleAttributes->setAttribute($key, $value);
+    return $this;
+  }
+
+  /**
+   * Merge attributes into the toolbar item element title attributes.
+   *
+   * @param array|\Drupal\Core\Template\Attribute $attributes
+   *   The attributes to merge.
+   *
+   * @return $this
+   */
+  public function mergeTitleAttributes(array|Attribute $attributes): self {
+    if (is_array($attributes)) {
+      $attributes = new Attribute($attributes);
+    }
+    $this->titleAttributes->merge($attributes);
+    return $this;
+  }
+
+  /**
+   * Add a class to the toolbar item element icon attributes.
+   *
+   * @param string|array ...
+   *   CSS classes to add to the class attribute array.
+   *
+   * @return $this
+   */
+  public function addIconClass(): self {
+    $args = func_get_args();
+    if ($args) {
+      $this->iconAttributes->addClass($args);
+    }
+    return $this;
+  }
+
+  /**
+   * Set an attribute to the toolbar item element icon attributes.
+   *
+   * @param string $key
+   *   The attribute key.
+   * @param string $value
+   *   The attribute value.
+   *
+   * @return $this
+   */
+  public function setIconAttribute(string $key, string $value): self {
+    $this->iconAttributes->setAttribute($key, $value);
+    return $this;
+  }
+
+  /**
+   * Merge attributes into the toolbar item element icon attributes.
+   *
+   * @param array|\Drupal\Core\Template\Attribute $attributes
+   *   The attributes to merge.
+   *
+   * @return $this
+   */
+  public function mergeIconAttributes(array|Attribute $attributes): self {
+    if (is_array($attributes)) {
+      $attributes = new Attribute($attributes);
+    }
+    $this->iconAttributes->merge($attributes);
+    return $this;
+  }
+
+  /**
+   * Add a class to the toolbar item element image attributes.
+   *
+   * @param string|array ...
+   *   CSS classes to add to the class attribute array.
+   *
+   * @return $this
+   */
+  public function addImageClass(): self {
+    $args = func_get_args();
+    if ($args) {
+      $this->imageAttributes->addClass($args);
+    }
+    return $this;
+  }
+
+  /**
+   * Set an attribute to the toolbar item element image attributes.
+   *
+   * @param string $key
+   *   The attribute key.
+   * @param string $value
+   *   The attribute value.
+   *
+   * @return $this
+   */
+  public function setImageAttribute(string $key, string $value): self {
+    $this->imageAttributes->setAttribute($key, $value);
+    return $this;
+  }
+
+  /**
+   * Merge attributes into the toolbar item element image attributes.
+   *
+   * @param array|\Drupal\Core\Template\Attribute $attributes
+   *   The attributes to merge.
+   *
+   * @return $this
+   */
+  public function mergeImageAttributes(array|Attribute $attributes): self {
+    if (is_array($attributes)) {
+      $attributes = new Attribute($attributes);
+    }
+    $this->imageAttributes->merge($attributes);
+    return $this;
+  }
+
+  /**
    * Add a class to the toolbar item element badge attributes.
    *
    * @param string|array ...
@@ -621,6 +786,9 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
       '#image' => $image,
       '#badge' => $this->getBadge(),
       '#attributes' => $this->attributes,
+      '#title_attributes' => $this->titleAttributes,
+      '#icon_attributes' => $this->iconAttributes,
+      '#image_attributes' => $this->imageAttributes,
       '#badge_attributes' => $this->badgeAttributes,
       '#access' => $access,
       '#weight' => $this->weight,

@@ -36,14 +36,12 @@
     image ? 'is-active:bg-base-500',
   ]
 %}
-{% set title_attributes = create_attribute() %}
 {%
   set title_classes = [
     'whitespace-nowrap',
     alignment == 'horizontal' and style != 'modal' ? 'text-xs',
   ]
 %}
-{% set image_attributes = create_attribute() %}
 {%
   set image_classes = image_classes is defined ? image_classes : [
     alignment == 'horizontal' ? 'block h-full w-auto -ml-3 rounded-r-lg',
@@ -56,7 +54,6 @@
     height: alignment == 'vertical' ? 50 : 40,
   }
 %}
-{% set icon_attributes = create_attribute() %}
 {%
   set icon_classes = icon_classes is defined ? icon_classes : [
     alignment == 'vertical' ? 'text-lg',
@@ -75,7 +72,7 @@
   {% endif %}
   {% if image %}
     {% block image %}
-      {{ neo_image_style(image, {cropSides: 1, scale: image_size})|neo_class(image_classes) }}
+      {{ neo_image_style(image, {cropSides: 1, scale: image_size}, NULL, NULL, image_attributes.addClass(image_classes)) }}
     {% endblock %}
   {% elseif icon %}
     {% block icon %}
