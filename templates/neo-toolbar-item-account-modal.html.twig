@@ -12,8 +12,8 @@
   {% if image %}
     {{ neo_image_style(image, {cropSides: 1, scale: {width: 80, height: 80}})|neo_class('block rounded-xl') }}
   {% endif %}
-  <div class="flex flex-col justify-center gap-1">
+  <div class="flex flex-col justify-center gap-1 overflow-hidden">
     <div class="text-lg font-bold">{{ name }}</div>
-    <div class="text-xs">{{ mail }}</div>
+    <div class="text-xs text-ellipsis overflow-hidden">{{ mail }}</div>
   </div>
 </div>

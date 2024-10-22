@@ -6,6 +6,7 @@ namespace Drupal\neo_toolbar\Plugin\ToolbarItem;
 
 use Drupal\Component\Transliteration\TransliterationInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -31,11 +32,11 @@ final class User extends ToolbarItemPluginBase {
   use ToolbarItemRegionTrait;
 
   /**
-   * Drupal\Core\Session\AccountProxy definition.
+   * The current user.
    *
-   * @var \Drupal\Core\Session\AccountProxy
+   * @var \Drupal\user\UserInterface
    */
-  protected $currentAccount;
+  protected $currentUser;
 
   /**
    * Creates a toolbar item instance.
@@ -45,10 +46,11 @@ final class User extends ToolbarItemPluginBase {
     $plugin_id,
     $plugin_definition,
     TransliterationInterface $transliteration,
-    AccountProxyInterface $current_user
+    AccountProxyInterface $current_user,
+    EntityTypeManagerInterface $entity_type_manager
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $transliteration);
-    $this->currentAccount = $current_user;
+    $this->currentUser = $entity_type_manager->getStorage('user')->load($current_user->id());
   }
 
   /**
@@ -60,7 +62,8 @@ final class User extends ToolbarItemPluginBase {
       $plugin_id,
       $plugin_definition,
       $container->get('transliteration'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -105,22 +108,40 @@ final class User extends ToolbarItemPluginBase {
    */
   public function getElement(): ToolbarItemElement {
     $element = parent::getElement();
-    $email = $this->currentAccount->getEmail();
-    $image = $this->getGravatar($email);
+    $email = $this->currentUser->getEmail();
+    $image = $this->getImage();
     $element->setTitle($this->t('Your Account'));
     $element->setImage($image);
-    $this->linkProcessElement($element, 'internal:/user/' . $this->currentAccount->id());
+    $this->linkProcessElement($element, 'internal:/user/' . $this->currentUser->id());
     $element->addCacheContexts(['user']);
     $this->processRegionElementAsModal($element, NULL, [
       'header' => [
         '#theme' => 'neo_toolbar_item_account_modal',
-        '#image' => $this->getGravatar($email, 80),
-        '#name' => $this->currentAccount->getDisplayName(),
+        '#image' => $image,
+        '#name' => $this->currentUser->getDisplayName(),
         '#mail' => $email,
         '#weight' => -100,
       ],
     ]);
     return $element;
+  }
+
+  /**
+   * Get the user image.
+   *
+   * @return string
+   *   The image URL.
+   */
+  protected function getImage() {
+    // Support user_picture field.
+    if ($this->currentUser->hasField('user_picture') && !$this->currentUser->get('user_picture')->isEmpty()) {
+      /** @var \Drupal\file\FileInterface $file */
+      $file = $this->currentUser->get('user_picture')->entity;
+      if ($file) {
+        return $file->getFileUri();
+      }
+    }
+    return $this->getGravatar($this->currentUser->getEmail());
   }
 
   /**
