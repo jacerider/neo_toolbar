@@ -140,6 +140,13 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   protected $badgeAttributes;
 
   /**
+   * The toolbar item element attached.
+   *
+   * @var array
+   */
+  protected $attached = [];
+
+  /**
    * The toolbar item element children.
    *
    * @var \Drupal\neo_toolbar\ToolbarItemElement[]
@@ -667,6 +674,19 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   }
 
   /**
+   * Add a library attachment to the toolbar item element.
+   *
+   * @param string $attachment
+   *   The attachment.
+   *
+   * @return $this
+   */
+  public function addLibrary(string $attachment): self {
+    $this->attached['library'][] = $attachment;
+    return $this;
+  }
+
+  /**
    * Add a child to the toolbar item element.
    *
    * @param \Drupal\neo_toolbar\ToolbarItemElement $element
@@ -792,6 +812,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
       '#badge_attributes' => $this->badgeAttributes,
       '#access' => $access,
       '#weight' => $this->weight,
+      '#attached' => $this->attached,
       '#cache' => [
         'contexts' => $this->getCacheContexts(),
         'tags' => $this->getCacheTags(),
@@ -802,7 +823,11 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
       $tooltip = new Tooltip($title);
       $tooltip->setPlacement($alignment === 'vertical' ? 'right' : 'bottom');
       $tooltip->applyToAttribute($this->attributes);
-      $build['#attached'] = $tooltip->getAttachments();
+      foreach ($tooltip->getAttachments() as $type => $attachments) {
+        foreach ($attachments as $attachment) {
+          $build['#attached'][$type][] = $attachment;
+        }
+      }
     }
     if ($modal = $this->getModal()) {
       $this->mergeAttributes($modal->getTriggerAttributes());
