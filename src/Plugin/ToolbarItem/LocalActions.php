@@ -121,9 +121,26 @@ final class LocalActions extends ToolbarItemPluginBase {
       $element->setAccess($action['#access']);
       $element->setWeight($action['#weight'] ?? 0);
       $element->setDynamicIcon($action['#link']['title']);
+      /** @var \Drupal\Core\Url $url */
       $url = $action['#link']['url'];
       if (!empty($action['#link']['localized_options']['query'])) {
         $url->setOption('query', $action['#link']['localized_options']['query']);
+      }
+      if (!empty($action['#link']['localized_options']['attributes'])) {
+        foreach ($action['#link']['localized_options']['attributes'] as $key => $value) {
+          if ($key === 'data-dialog-type') {
+            $element->addLibrary('core/drupal.dialog.ajax');
+          }
+          if ($key === 'class') {
+            $value = is_array($value) ? $value : explode(' ', $value);
+            foreach ($value as $class) {
+              $element->addClass($class);
+            }
+          }
+          else {
+            $element->setAttribute($key, $value);
+          }
+        }
       }
       $this->linkProcessElement($element, $url);
       $elements[] = $element;
