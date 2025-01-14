@@ -95,7 +95,7 @@ final class LocalTasks extends ToolbarItemPluginBase {
    * {@inheritdoc}
    */
   public function getIcon(): string|null {
-    return 'tasks-alt';
+    return 'dot-circle';
   }
 
   /**
@@ -129,7 +129,12 @@ final class LocalTasks extends ToolbarItemPluginBase {
       foreach ($primary['tabs'] as $primary_tab) {
         $element = $this->getElement();
         $element->setTitle($primary_tab['#link']['title']);
-        $element->setDynamicIcon($primary_tab['#link']['title']);
+        if (!empty($primary_tab['#link']['localized_options']['icon'])) {
+          $element->setIcon($primary_tab['#link']['localized_options']['icon']);
+        }
+        else {
+          $element->setDynamicIcon($primary_tab['#link']['title']);
+        }
         $element->setAccess($primary_tab['#access']);
         $element->setWeight($primary_tab['#weight']);
         $this->linkProcessElement($element, $primary_tab['#link']['url']);
