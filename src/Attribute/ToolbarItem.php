@@ -36,6 +36,7 @@ final class ToolbarItem extends AttributeBase {
     public readonly ?TranslatableMarkup $description = NULL,
     public readonly ?bool $region_create = FALSE,
     public readonly ?string $deriver = NULL,
+    public ?string $provider = NULL,
   ) {}
 
 }
