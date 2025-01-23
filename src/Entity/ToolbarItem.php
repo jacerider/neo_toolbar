@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\neo_toolbar\Entity;
 
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
@@ -213,7 +214,7 @@ final class ToolbarItem extends ConfigEntityBase implements ToolbarItemInterface
    */
   public function getElementCollection() {
     if (!$this->elementCollection) {
-      $this->elementCollection = new ToolbarItemCollection($this->getRegion()->getAlignment(), $this->getPlugin()->getStyle(), $this->getWeight());
+      $this->elementCollection = new ToolbarItemCollection($this->getRegion()->getAlignment(), $this->getPlugin(), $this->getWeight());
       foreach ($this->getPlugin()->getElements() as $element) {
         if ($element instanceof ToolbarItemElement) {
           $this->elementCollection->add($element);
@@ -221,6 +222,13 @@ final class ToolbarItem extends ConfigEntityBase implements ToolbarItemInterface
       }
     }
     return $this->elementCollection;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function accessBySiblings(ToolbarItemInterface $previous = NULL, ToolbarItemInterface $next = NULL): AccessResultInterface {
+    return $this->getPlugin()->accessBySiblings($previous, $next);
   }
 
   /**

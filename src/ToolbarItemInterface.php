@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\neo_toolbar;
 
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Template\Attribute;
 use Drupal\neo\VisibilityEntityInterface;
@@ -76,5 +77,18 @@ interface ToolbarItemInterface extends ConfigEntityInterface, VisibilityEntityIn
    *   The element collection.
    */
   public function getElementCollection();
+
+  /**
+   * Indicates whether the item should be shown based on its siblings.
+   *
+   * @param \Drupal\neo_toolbar\ToolbarItemInterface|null $previous
+   *   The previous item.
+   * @param \Drupal\neo_toolbar\ToolbarItemInterface|null $next
+   *   The next item.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public function accessBySiblings(ToolbarItemInterface $previous = NULL, ToolbarItemInterface $next = NULL): AccessResultInterface;
 
 }

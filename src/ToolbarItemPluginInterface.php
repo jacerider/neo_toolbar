@@ -7,6 +7,7 @@ namespace Drupal\neo_toolbar;
 use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Plugin\DerivativeInspectionInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -88,6 +89,19 @@ interface ToolbarItemPluginInterface extends ConfigurableInterface, PluginFormIn
    * @see \Drupal\neo_toolbar\ToolbarItemAccessControlHandler
    */
   public function access(AccountInterface $account, $return_as_object = FALSE);
+
+  /**
+   * Indicates whether the item should be shown based on its siblings.
+   *
+   * @param \Drupal\neo_toolbar\ToolbarItemInterface|null $previous
+   *   The previous item.
+   * @param \Drupal\neo_toolbar\ToolbarItemInterface|null $next
+   *   The next item.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public function accessBySiblings(ToolbarItemInterface $previous = NULL, ToolbarItemInterface $next = NULL): AccessResultInterface;
 
   /**
    * Suggests a machine name to identify an instance of this item.

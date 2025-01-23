@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\neo_toolbar;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\neo\Helpers\Str;
@@ -20,6 +21,13 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
    * @var string
    */
   protected $alignment;
+
+  /**
+   * The toolbar item plugin.
+   *
+   * @var \Drupal\neo_toolbar\ToolbarItemPluginInterface
+   */
+  protected $plugin;
 
   /**
    * The toolbar item element style.
@@ -47,15 +55,16 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
    *
    * @param string $alignment
    *   The toolbar item element alignment.
-   * @param string $style
-   *   The toolbar item element style.
+   * @param \Drupal\neo_toolbar\ToolbarItemPluginInterface $plugin
+   *   The toolbar item plugin.
    * @param int $weight
    *   The toolbar item element weight.
    */
-  public function __construct($alignment, string $style = 'default', int $weight = 0) {
+  public function __construct($alignment, ToolbarItemPluginInterface $plugin, int $weight = 0) {
     $this->alignment = $alignment;
-    $this->style = Str::snake($style);
+    $this->plugin = $plugin;
     $this->weight = $weight;
+    $this->setStyle($plugin->getStyle());
   }
 
   /**
@@ -69,6 +78,16 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
   }
 
   /**
+   * Get the toolbar item plugin.
+   *
+   * @return \Drupal\neo_toolbar\ToolbarItemPluginInterface
+   *   The toolbar item plugin.
+   */
+  public function getPlugin(): ToolbarItemPluginInterface {
+    return $this->plugin;
+  }
+
+  /**
    * Set the toolbar item element style.
    *
    * @param string $style
@@ -76,8 +95,8 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
    *
    * @return $this
    */
-  public function setStyle(string $style): self {
-    $this->style = $style;
+  public function setStyle(string $style = 'default'): self {
+    $this->style = Str::snake($style);
     return $this;
   }
 
@@ -166,6 +185,7 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
         '#style' => $style,
         '#weight' => $this->getWeight(),
       ];
+
       foreach ($this->elements as $element) {
         $element->setStyle($style);
         $build['#elements'][] = $element->toRenderable();

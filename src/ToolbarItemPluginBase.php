@@ -8,6 +8,7 @@ use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Transliteration\TransliterationInterface;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -274,6 +275,13 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
    * @see self::access()
    */
   protected function itemAccess(AccountInterface $account) {
+    return AccessResult::allowed();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function accessBySiblings(ToolbarItemInterface $previous = NULL, ToolbarItemInterface $next = NULL): AccessResultInterface {
     return AccessResult::allowed();
   }
 

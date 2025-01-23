@@ -141,6 +141,21 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
       }
       return $this->isEditMode() || $access->isAllowed();
     });
+    // Check sibling access.
+    $items = array_filter($items, function ($item, $key) use ($items, $cacheableMetadata) {
+      $keys = array_keys($items);
+      $found_index = array_search($key, $keys);
+      if ($found_index !== FALSE) {
+        $previous = $found_index > 0 ? $keys[$found_index - 1] : NULL;
+        $next = $found_index < count($keys) - 1 ? $keys[$found_index + 1] : NULL;
+        $siblingAccess = $item->accessBySiblings($items[$previous] ?? NULL, $items[$next] ?? NULL);
+        if ($siblingAccess->isForbidden()) {
+          $cacheableMetadata->addCacheableDependency($siblingAccess);
+          return $this->isEditMode();
+        }
+      }
+      return TRUE;
+    }, ARRAY_FILTER_USE_BOTH);
     return $items;
   }
 
