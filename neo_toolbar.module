@@ -15,7 +15,7 @@ use Drupal\Core\Session\AccountInterface;
  * Add toolbar to the top of the page.
  */
 function neo_toolbar_page_top(array &$page_top) {
-  if (!\Drupal::currentUser()->hasPermission('access neo_toolbar')) {
+  if (!neo_toolbar_toolbar_view_access()) {
     return;
   }
   /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
@@ -37,7 +37,7 @@ function neo_toolbar_page_top(array &$page_top) {
  * Implements hook_block_access().
  */
 function neo_toolbar_block_access(BlockInterface $block, $operation, AccountInterface $account) {
-  if (!\Drupal::currentUser()->hasPermission('access neo_toolbar')) {
+  if (!neo_toolbar_toolbar_view_access()) {
     return;
   }
   switch ($block->getPluginId()) {
@@ -64,6 +64,22 @@ function neo_toolbar_block_access(BlockInterface $block, $operation, AccountInte
 }
 
 /**
+ * Generic access callback for the toolbar.
+ *
+ * @return bool
+ *   TRUE if the current user has access to the toolbar, FALSE otherwise.
+ */
+function neo_toolbar_toolbar_view_access(): bool {
+  $access = \Drupal::currentUser()->hasPermission('access neo_toolbar');
+  // If masquerading, we assume toolbar access.
+  if (!$access && \Drupal::hasService('masquerade')) {
+    $masquerade = \Drupal::service('masquerade');
+    return $masquerade->isMasquerading();
+  }
+  return $access;
+}
+
+/**
  * Implements hook_theme().
  */
 function neo_toolbar_theme(): array {
@@ -76,6 +92,7 @@ function neo_toolbar_theme(): array {
     ],
     'neo_toolbar_item' => [
       'variables' => [
+        'attributes' => [],
         'alignment' => NULL,
         'style' => 'default',
         'elements' => [],
