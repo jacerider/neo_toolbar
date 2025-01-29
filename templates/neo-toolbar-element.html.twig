@@ -13,20 +13,29 @@
 #}
 {%
   set classes = [
-    'flex',
-    'gap-2',
-    'grow',
-    'transition',
-    'border-2',
+    'flex gap-2 grow transition border-2',
     image ? 'border-base-200' : 'border-transparent',
     'overflow-hidden',
     'color:hover:bg-base-800 color:hover:border-base-800',
     'focus:outline-none focus:ring focus:ring-primary focus:ring-offset-2 focus:z-10',
     alignment == 'horizontal' ? 'px-3',
-    style == 'default' ? 'items-center justify-center rounded-xl bg-base-0 text-base-content-200 hover:bg-base-100 hover:text-base-content-100 hover:border-primary-500 is-active:bg-base-200 is-active:text-base-content-200 is-active:border-primary-500',
+    style == 'default' ? '
+      items-center justify-center rounded-xl bg-base-0 text-base-content-200
+      hover:bg-base-100 hover:text-base-content-100 hover:border-primary-500
+      is-active:bg-base-200 is-active:text-base-content-200 is-active:border-primary-500
+      color:bg-base-500 color:text-base-content-500 color:border-base-500
+      color:hover:bg-base-600 color:hover:border-base-400
+    ',
     style == 'default' and alignment == 'horizontal' ? 'h-10',
     style == 'default' and alignment == 'vertical' ? 'h-12 w-12',
-    style == 'pill' ? 'items-center justify-center bg-base-200 text-base-content-200 h-10 hover:bg-base-100 hover:text-base-content-100 hover:border-primary-500 hover:is-active:border-primary-600 is-active:bg-primary-500 is-active:border-primary-500 is-active:text-primary-content-500 dark:hover:border-base-200',
+    style == 'pill' ? '
+      items-center justify-center bg-base-200 text-base-content-200 h-10
+      hover:bg-base-100 hover:text-base-content-100 hover:border-primary-500 hover:is-active:border-primary-600
+      is-active:bg-primary-500 is-active:border-primary-500 is-active:text-primary-content-500
+      dark:hover:border-base-200 dark:hover:bg-base-100
+      dark:is-active:bg-primary-500
+      dark:is-active:hover:border-primary-600
+    ',
     style == 'pill' and alignment == 'horizontal' ? 'first:rounded-l-xl last:rounded-r-xl',
     style == 'pill' and alignment == 'vertical' ? 'first:rounded-t-xl last:rounded-b-xl',
     style == 'pill_nested' ? 'items-center justify-center bg-primary-400 text-primary-content-400 h-8 text-sm hover:border-primary-800 hover:text-primary-content-400 is-active:bg-primary-800 is-active:border-primary-800 is-active:text-primary-content-800',
