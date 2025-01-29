@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\neo_toolbar;
 
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\neo\Helpers\Str;
@@ -55,16 +54,15 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
    *
    * @param string $alignment
    *   The toolbar item element alignment.
-   * @param \Drupal\neo_toolbar\ToolbarItemPluginInterface $plugin
-   *   The toolbar item plugin.
+   * @param string $style
+   *   The toolbar item element style.
    * @param int $weight
    *   The toolbar item element weight.
    */
-  public function __construct($alignment, ToolbarItemPluginInterface $plugin, int $weight = 0) {
+  public function __construct($alignment, string $style = 'default', int $weight = 0) {
     $this->alignment = $alignment;
-    $this->plugin = $plugin;
     $this->weight = $weight;
-    $this->setStyle($plugin->getStyle());
+    $this->setStyle($style);
   }
 
   /**
