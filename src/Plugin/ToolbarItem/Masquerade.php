@@ -7,7 +7,6 @@ namespace Drupal\neo_toolbar\Plugin\ToolbarItem;
 use Drupal\Component\Transliteration\TransliterationInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBuilderInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\masquerade\Form\MasqueradeForm;
@@ -122,14 +121,11 @@ final class Masquerade extends ToolbarItemPluginBase {
     else {
       $build['#context']['content'] = $this->formBuilder->getForm(MasqueradeForm::class);
     }
-    // $email = $this->currentUser->getEmail();
-    // $image = $this->getImage();
-    // $element->setTitle($this->t('Masquerade as user'));
-    // $element->setImage($image);
-    // $element->setTag('a');
-    // $element->setAttribute('href', '/masquerade');
+    if ($this->masquerade->isMasquerading()) {
+      $element->setTitle('Masquerading as ' . \Drupal::currentUser()->getDisplayName());
+      $element->setBadge('✓');
+    }
     $this->linkProcessElement($element, 'internal:/masquerade');
-    // $element->addCacheContexts(['user']);
     $this->processRegionElementAsModal($element, $this->icon('Masquerade as User', $this->getIcon()), $build);
     return $element;
   }
