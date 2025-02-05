@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\neo_toolbar\Entity;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
@@ -150,7 +149,9 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
         $next = $found_index < count($keys) - 1 ? $keys[$found_index + 1] : NULL;
         $siblingAccess = $item->accessBySiblings($items[$previous] ?? NULL, $items[$next] ?? NULL);
         if ($siblingAccess->isForbidden()) {
-          $cacheableMetadata->addCacheableDependency($siblingAccess);
+          if ($cacheableMetadata) {
+            $cacheableMetadata->addCacheableDependency($siblingAccess);
+          }
           return $this->isEditMode();
         }
       }
