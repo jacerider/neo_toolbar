@@ -104,7 +104,7 @@ final class Masquerade extends ToolbarItemPluginBase {
     $build = [
       '#type' => 'inline_template',
       '#template' => '
-        <div class="pb-4 mx-7">
+        <div class="mx-7">
           {{ content }}
         </div>
       ',
