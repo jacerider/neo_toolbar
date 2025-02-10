@@ -9,6 +9,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\masquerade\Form\MasqueradeForm;
 use Drupal\masquerade\Masquerade as MasqueradeCore;
 use Drupal\neo_icon\IconTranslationTrait;
@@ -108,6 +109,9 @@ final class Masquerade extends ToolbarItemPluginBase {
           {{ content }}
         </div>
       ',
+      '#cache' => [
+        'tags' => ['session.is_masquerading'],
+      ],
     ];
 
     if ($this->masquerade->isMasquerading()) {
