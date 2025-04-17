@@ -227,7 +227,7 @@ final class ToolbarItem extends ConfigEntityBase implements ToolbarItemInterface
   /**
    * {@inheritdoc}
    */
-  public function accessBySiblings(ToolbarItemInterface $previous = NULL, ToolbarItemInterface $next = NULL): AccessResultInterface {
+  public function accessBySiblings(?ToolbarItemInterface $previous = NULL, ?ToolbarItemInterface $next = NULL): AccessResultInterface {
     return $this->getPlugin()->accessBySiblings($previous, $next);
   }
 

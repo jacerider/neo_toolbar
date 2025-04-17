@@ -9,7 +9,6 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Core\Url;
 use Drupal\masquerade\Form\MasqueradeForm;
 use Drupal\masquerade\Masquerade as MasqueradeCore;
 use Drupal\neo_icon\IconTranslationTrait;
@@ -57,7 +56,7 @@ final class Masquerade extends ToolbarItemPluginBase {
     $plugin_definition,
     TransliterationInterface $transliteration,
     MasqueradeCore $masquerade,
-    FormBuilderInterface $form_builder
+    FormBuilderInterface $form_builder,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $transliteration);
     $this->masquerade = $masquerade;

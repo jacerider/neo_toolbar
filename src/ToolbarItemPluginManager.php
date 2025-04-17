@@ -53,7 +53,7 @@ final class ToolbarItemPluginManager extends DefaultPluginManager implements Con
   /**
    * {@inheritdoc}
    */
-  public function getSortedDefinitions(array $definitions = NULL, $show_hidden = FALSE) {
+  public function getSortedDefinitions(?array $definitions = NULL, $show_hidden = FALSE) {
     // Sort the plugins first by category, then by admin label.
     $definitions = $this->traitGetSortedDefinitions($definitions, 'label');
     // Do not display the 'broken' plugin in the UI.

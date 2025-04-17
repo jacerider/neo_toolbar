@@ -6,7 +6,6 @@ namespace Drupal\neo_toolbar;
 
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
-use Drupal\Core\Template\Attribute;
 use Drupal\neo\VisibilityEntityInterface;
 
 /**
@@ -89,6 +88,6 @@ interface ToolbarItemInterface extends ConfigEntityInterface, VisibilityEntityIn
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function accessBySiblings(ToolbarItemInterface $previous = NULL, ToolbarItemInterface $next = NULL): AccessResultInterface;
+  public function accessBySiblings(?ToolbarItemInterface $previous = NULL, ?ToolbarItemInterface $next = NULL): AccessResultInterface;
 
 }

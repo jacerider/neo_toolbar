@@ -38,7 +38,7 @@ final class Event extends ToolbarBadgePluginBase implements ContainerFactoryPlug
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    EventDispatcherInterface $event_dispatcher
+    EventDispatcherInterface $event_dispatcher,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->eventDispatcher = $event_dispatcher;

@@ -115,7 +115,7 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
   /**
    * {@inheritdoc}
    */
-  public function getItems($regionId = NULL, CacheableMetadata $cacheableMetadata = NULL): array {
+  public function getItems($regionId = NULL, ?CacheableMetadata $cacheableMetadata = NULL): array {
     if (!isset($this->items)) {
       $this->items = [];
       $ids = $this->entityTypeManager()->getStorage('neo_toolbar_item')->getQuery()

@@ -61,7 +61,7 @@ final class Divider extends ToolbarItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function accessBySiblings(ToolbarItemInterface $previous = NULL, ToolbarItemInterface $next = NULL): AccessResultInterface {
+  public function accessBySiblings(?ToolbarItemInterface $previous = NULL, ?ToolbarItemInterface $next = NULL): AccessResultInterface {
     if (!$previous) {
       return AccessResult::forbidden();
     }

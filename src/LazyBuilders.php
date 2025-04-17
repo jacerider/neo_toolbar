@@ -18,7 +18,7 @@ final class LazyBuilders implements TrustedCallbackInterface {
    */
   public function __construct(
     protected readonly EntityTypeManager $entityTypeManager,
-    protected readonly ToolbarRegionPluginManager $regionPluginManager
+    protected readonly ToolbarRegionPluginManager $regionPluginManager,
   ) {
   }
 

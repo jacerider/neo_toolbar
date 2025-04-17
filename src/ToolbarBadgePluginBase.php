@@ -27,7 +27,7 @@ abstract class ToolbarBadgePluginBase extends PluginBase implements ToolbarBadge
   public function __construct(
     array $configuration,
     $plugin_id,
-    $plugin_definition
+    $plugin_definition,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->setConfiguration($configuration);
@@ -102,7 +102,7 @@ abstract class ToolbarBadgePluginBase extends PluginBase implements ToolbarBadge
    *
    * @see \Drupal\neo_toolbar\ToolbarBadgePluginBase::badgeForm()
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state, array &$complete_form = NULL) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state, ?array &$complete_form = NULL) {
     $form += $this->badgeForm($form, $form_state, $complete_form);
     $form['scheme'] = [
       '#type' => 'neo_scheme',

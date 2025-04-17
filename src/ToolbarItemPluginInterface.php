@@ -101,7 +101,7 @@ interface ToolbarItemPluginInterface extends ConfigurableInterface, PluginFormIn
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function accessBySiblings(ToolbarItemInterface $previous = NULL, ToolbarItemInterface $next = NULL): AccessResultInterface;
+  public function accessBySiblings(?ToolbarItemInterface $previous = NULL, ?ToolbarItemInterface $next = NULL): AccessResultInterface;
 
   /**
    * Suggests a machine name to identify an instance of this item.

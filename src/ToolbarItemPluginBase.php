@@ -52,7 +52,7 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    TransliterationInterface $transliteration
+    TransliterationInterface $transliteration,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->transliteration = $transliteration;
@@ -193,7 +193,7 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
    *
    * @see \Drupal\neo_toolbar\ToolbarItemPluginBase::itemForm()
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state, array &$complete_form = NULL) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state, ?array &$complete_form = NULL) {
     $form += $this->itemForm($form, $form_state, $complete_form);
 
     // Add context mapping UI form elements.
@@ -281,7 +281,7 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
   /**
    * {@inheritdoc}
    */
-  public function accessBySiblings(ToolbarItemInterface $previous = NULL, ToolbarItemInterface $next = NULL): AccessResultInterface {
+  public function accessBySiblings(?ToolbarItemInterface $previous = NULL, ?ToolbarItemInterface $next = NULL): AccessResultInterface {
     return AccessResult::allowed();
   }
 

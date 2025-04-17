@@ -42,7 +42,7 @@ interface ToolbarInterface extends ConfigEntityInterface, VisibilityEntityInterf
    * @return \Drupal\neo_toolbar\ToolbarItemInterface[]
    *   The items.
    */
-  public function getItems($regionId = NULL, CacheableMetadata $cacheableMetadata = NULL): array;
+  public function getItems($regionId = NULL, ?CacheableMetadata $cacheableMetadata = NULL): array;
 
   /**
    * Get the toolbar region ids.

@@ -29,7 +29,7 @@ trait ToolbarItemBadgeTrait {
    * @param array|null $settings
    *   The settings.
    */
-  public function badgeProcessElement(ToolbarItemElement $element, string $type = NULL, array $settings = NULL): void {
+  public function badgeProcessElement(ToolbarItemElement $element, ?string $type = NULL, ?array $settings = NULL): void {
     $type = $type ?? $this->configuration['badge']['type'] ?? '';
     $settings = $settings ?? $this->configuration['badge']['settings'] ?? [];
     if ($type && $this->getBadgeManager()->hasDefinition($type)) {

@@ -47,7 +47,7 @@ final class User extends ToolbarItemPluginBase {
     $plugin_definition,
     TransliterationInterface $transliteration,
     AccountProxyInterface $current_user,
-    EntityTypeManagerInterface $entity_type_manager
+    EntityTypeManagerInterface $entity_type_manager,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $transliteration);
     $this->currentUser = $entity_type_manager->getStorage('user')->load($current_user->id());

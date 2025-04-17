@@ -59,7 +59,7 @@ final class ToolbarItemListBuilder extends ConfigEntityListBuilder implements Fo
   public function __construct(
     EntityTypeInterface $entity_type,
     EntityStorageInterface $storage,
-    FormBuilderInterface $form_builder
+    FormBuilderInterface $form_builder,
   ) {
     parent::__construct($entity_type, $storage);
     $this->formBuilder = $form_builder;
@@ -90,7 +90,7 @@ final class ToolbarItemListBuilder extends ConfigEntityListBuilder implements Fo
    *
    * @todo Add a link to add a new item to the #empty text.
    */
-  public function render(Request $request = NULL, ToolbarInterface $neo_toolbar = NULL) {
+  public function render(?Request $request = NULL, ?ToolbarInterface $neo_toolbar = NULL) {
     if ($request && $neo_toolbar) {
       $this->request = $request;
       $this->toolbar = $neo_toolbar;

@@ -18,7 +18,6 @@ use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Twig\Cache\CacheInterface;
 
 /**
  * Returns responses for Neo | Toolbar routes.
@@ -33,7 +32,7 @@ final class ToolbarUrlAutocompleteController extends ControllerBase {
     private readonly LocalTaskManagerInterface $localTaskManager,
     private readonly AccessManagerInterface $accessManager,
     private readonly RouteMatchInterface $routeMatch,
-    private readonly CacheBackendInterface $cache
+    private readonly CacheBackendInterface $cache,
   ) {}
 
   /**
