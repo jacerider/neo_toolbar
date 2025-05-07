@@ -15,6 +15,19 @@ trait ToolbarItemRegionTrait {
   protected $entityTypeManager;
 
   /**
+   * Get the toolbar items.
+   *
+   * @param string|null $regionId
+   *   The region id.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheableMetadata
+   *   The cacheable metadata.
+   *
+   * @return \Drupal\neo_toolbar\ToolbarItemInterface[]
+   *   The items.
+   */
+  protected array $regionItems;
+
+  /**
    * Process the element and add region items as modal.
    *
    * @param ToolbarItemElement $element
@@ -47,9 +60,14 @@ trait ToolbarItemRegionTrait {
    *   The region items.
    */
   protected function getRegionItems($regionId = NULL): array {
-    $regionId = $regionId ?? ($this->configuration['id'] ? 'item:' . $this->configuration['id'] : NULL);
-    $storage = $this->getEntityTypeManager()->getStorage('neo_toolbar_item');
-    return $storage->loadByProperties(['region' => $regionId]);
+    if (!isset($this->regionItems)) {
+      $this->regionItems = [];
+      $regionId = $regionId ?? ($this->configuration['id'] ? 'item:' . $this->configuration['id'] : NULL);
+      if ($toolbar = $this->getRegionToolbar()) {
+        $this->regionItems = $toolbar->getItems($regionId);
+      }
+    }
+    return $this->regionItems;
   }
 
   /**
@@ -70,16 +88,16 @@ trait ToolbarItemRegionTrait {
   }
 
   /**
-   * Retrieves the Entity Type Manager for the Entity.
+   * Retrieves the toolbar.
    *
-   * @return \Drupal\Core\Entity\EntityTypeManagerInterface|object|null
-   *   The entity type manager.
+   * @return \Drupal\neo_toolbar\ToolbarInterface|null
+   *   The toolbar.
    */
-  protected function getEntityTypeManager() {
-    if (!isset($this->entityTypeManager)) {
-      $this->entityTypeManager = \Drupal::entityTypeManager();
+  protected function getRegionToolbar(): ?ToolbarInterface {
+    if (isset($this->toolbar) && $this->toolbar instanceof ToolbarInterface) {
+      return $this->toolbar;
     }
-    return $this->entityTypeManager;
+    return NULL;
   }
 
 }

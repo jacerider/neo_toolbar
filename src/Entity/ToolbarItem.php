@@ -195,7 +195,7 @@ final class ToolbarItem extends ConfigEntityBase implements ToolbarItemInterface
       ] + $this->getSettings();
       $this->pluginCollection = new DefaultSingleLazyPluginCollection(\Drupal::service('plugin.manager.neo_toolbar_item'), $this->plugin, $settings);
       $plugin = $this->pluginCollection->get($this->plugin);
-      $plugin->addCacheableDependency($this);
+      $plugin->setToolbar($this->getToolbar());
     }
     return $this->pluginCollection;
   }

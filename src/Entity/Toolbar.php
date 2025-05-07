@@ -91,6 +91,13 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
   protected $items;
 
   /**
+   * The cacheable metadata for the items.
+   *
+   * @var \Drupal\Core\Cache\CacheableMetadata
+   */
+  protected $itemsCacheableMetadata;
+
+  /**
    * The plugin collection that holds the regions.
    *
    * @var \Drupal\Core\Plugin\DefaultLazyPluginCollection
@@ -117,7 +124,8 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
    */
   public function getItems($regionId = NULL, ?CacheableMetadata $cacheableMetadata = NULL): array {
     if (!isset($this->items)) {
-      $this->items = [];
+      $this->itemsCacheableMetadata = new CacheableMetadata();
+      $items = [];
       $ids = $this->entityTypeManager()->getStorage('neo_toolbar_item')->getQuery()
         ->accessCheck(TRUE)
         ->condition('toolbar', $this->id)
@@ -125,38 +133,74 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
         ->sort('weight')
         ->execute();
       if ($ids) {
-        $this->items = $this->entityTypeManager()->getStorage('neo_toolbar_item')->loadMultiple($ids);
+        /** @var \Drupal\neo_toolbar\ToolbarItemInterface[] $items */
+        $items = $this->entityTypeManager()->getStorage('neo_toolbar_item')->loadMultiple($ids);
+
+        if (!$this->isEditMode()) {
+          // Temporarily group items by region to check sibling access. This
+          // grouping has all items prior to access checks.
+          $allItemsByRegion = [];
+          foreach ($items as $key => $item) {
+            $allItemsByRegion[$item->getRegionId()][$key] = $item;
+          }
+
+          // Check access for each item.
+          $items = array_filter($items, function ($item) {
+            $access = $item->access('view', NULL, TRUE);
+            $this->itemsCacheableMetadata->addCacheableDependency($item);
+            $this->itemsCacheableMetadata->addCacheableDependency($access);
+            return $access->isAllowed();
+          });
+
+          // Temporarily group items by region to check sibling access.
+          $itemsByRegion = [];
+          foreach ($items as $key => $item) {
+            $itemsByRegion[$item->getRegionId()][$key] = $item;
+          }
+
+          // Check to see if we have empty regions after access checks.
+          foreach ($allItemsByRegion as $regionId => $regionItems) {
+            if (!isset($itemsByRegion[$regionId])) {
+              // We have an empty region which may be toggled by an item.
+              $regionItemId = str_replace('item:', '', $regionId);
+              if (isset($items[$regionItemId])) {
+                // If we do have a triggering item, we need to remove it from
+                // the items list as well as the items by region list.
+                unset($itemsByRegion[$items[$regionItemId]->getRegionId()][$regionItemId]);
+                unset($items[$regionItemId]);
+              }
+            }
+          }
+
+          // Check sibling access for each item in a region.
+          foreach ($itemsByRegion as $regionId => $regionItems) {
+            $removeRegionItems = array_filter($regionItems, function ($item, $key) use ($regionItems) {
+              $keys = array_keys($regionItems);
+              $found_index = array_search($key, $keys);
+              if ($found_index !== FALSE) {
+                $previous = $found_index > 0 ? $keys[$found_index - 1] : NULL;
+                $next = $found_index < count($keys) - 1 ? $keys[$found_index + 1] : NULL;
+                $siblingAccess = $item->accessBySiblings($regionItems[$previous] ?? NULL, $regionItems[$next] ?? NULL);
+                if ($siblingAccess->isForbidden()) {
+                  return TRUE;
+                }
+              }
+              return FALSE;
+            }, ARRAY_FILTER_USE_BOTH);
+            $items = array_diff_key($items, $removeRegionItems);
+          }
+        }
       }
+      $this->items = $items;
     }
     $items = $this->items;
+
     if ($regionId) {
       $items = array_filter($this->items, fn($item) => $item->getRegionId() === $regionId);
     }
-    $items = array_filter($items, function ($item) use ($cacheableMetadata) {
-      $access = $item->access('view', NULL, TRUE);
-      if ($cacheableMetadata) {
-        $cacheableMetadata->addCacheableDependency($item);
-        $cacheableMetadata->addCacheableDependency($access);
-      }
-      return $this->isEditMode() || $access->isAllowed();
-    });
-    // Check sibling access.
-    $items = array_filter($items, function ($item, $key) use ($items, $cacheableMetadata) {
-      $keys = array_keys($items);
-      $found_index = array_search($key, $keys);
-      if ($found_index !== FALSE) {
-        $previous = $found_index > 0 ? $keys[$found_index - 1] : NULL;
-        $next = $found_index < count($keys) - 1 ? $keys[$found_index + 1] : NULL;
-        $siblingAccess = $item->accessBySiblings($items[$previous] ?? NULL, $items[$next] ?? NULL);
-        if ($siblingAccess->isForbidden()) {
-          if ($cacheableMetadata) {
-            $cacheableMetadata->addCacheableDependency($siblingAccess);
-          }
-          return $this->isEditMode();
-        }
-      }
-      return TRUE;
-    }, ARRAY_FILTER_USE_BOTH);
+    if ($cacheableMetadata) {
+      $cacheableMetadata->addCacheableDependency($this->itemsCacheableMetadata);
+    }
     return $items;
   }
 

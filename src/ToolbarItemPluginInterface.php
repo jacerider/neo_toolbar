@@ -23,6 +23,24 @@ interface ToolbarItemPluginInterface extends ConfigurableInterface, PluginFormIn
   public function label(): string;
 
   /**
+   * Set the toolbar this plugin belongs to.
+   *
+   * @param \Drupal\neo_toolbar\ToolbarInterface $toolbar
+   *   The toolbar this plugin belongs to.
+   *
+   * @return $this
+   */
+  public function setToolbar(ToolbarInterface $toolbar): self;
+
+  /**
+   * Get the toolbar this plugin belongs to.
+   *
+   * @return \Drupal\neo_toolbar\ToolbarInterface
+   *   The toolbar this plugin belongs to.
+   */
+  public function getToolbar(): ?ToolbarInterface;
+
+  /**
    * Get the plugin style.
    *
    * @return string

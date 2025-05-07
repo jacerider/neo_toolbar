@@ -39,6 +39,13 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
   use ToolbarItemTokenTrait;
 
   /**
+   * The toolbar this plugin belongs to.
+   *
+   * @var \Drupal\neo_toolbar\ToolbarInterface
+   */
+  protected ToolbarInterface $toolbar;
+
+  /**
    * The transliteration service.
    *
    * @var \Drupal\Component\Transliteration\TransliterationInterface
@@ -77,6 +84,22 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
   public function label(): string {
     // Cast the label to a string since it is a TranslatableMarkup object.
     return (string) $this->pluginDefinition['label'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setToolbar(ToolbarInterface $toolbar): self {
+    $this->addCacheableDependency($toolbar);
+    $this->toolbar = $toolbar;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getToolbar(): ?ToolbarInterface {
+    return $this->toolbar ?? NULL;
   }
 
   /**
