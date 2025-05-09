@@ -155,6 +155,7 @@ final class ToolbarItemListBuilder extends ConfigEntityListBuilder implements Fo
     }
 
     $form = [];
+
     $regions = $this->toolbar->getRegions();
     if ($regions) {
       foreach ($regions as $region) {

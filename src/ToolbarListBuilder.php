@@ -6,6 +6,7 @@ namespace Drupal\neo_toolbar;
 
 use Drupal\Core\Config\Entity\DraggableListBuilder;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
 
 /**
  * Provides a listing of toolbars.
@@ -38,6 +39,24 @@ final class ToolbarListBuilder extends DraggableListBuilder {
     $row['id']['data']['#markup'] = $entity->id();
     $row['status']['data']['#markup'] = $entity->status() ? $this->t('Enabled') : $this->t('Disabled');
     return $row + parent::buildRow($entity);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultOperations(EntityInterface $entity) {
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $entity */
+    $operations = parent::getDefaultOperations($entity);
+
+    $operations['items'] = [
+      'title' => t('Items'),
+      'weight' => -20,
+      'url' => Url::fromRoute('entity.neo_toolbar_item.collection', [
+        'neo_toolbar' => $entity->id(),
+      ]),
+    ];
+
+    return $operations;
   }
 
 }
