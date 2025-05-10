@@ -47,7 +47,7 @@ function neo_toolbar_block_access(BlockInterface $block, $operation, AccountInte
       /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
       $repository = \Drupal::service('neo_toolbar.repository');
       if ($repository->hasToolbarItemsOfType('local_actions')) {
-        return AccessResult::forbidden();
+        return AccessResult::forbidden()->cachePerPermissions();
       }
       break;
 
@@ -57,7 +57,7 @@ function neo_toolbar_block_access(BlockInterface $block, $operation, AccountInte
       /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
       $repository = \Drupal::service('neo_toolbar.repository');
       if ($repository->hasToolbarItemsOfType('local_tasks')) {
-        return AccessResult::forbidden();
+        return AccessResult::forbidden()->cachePerPermissions();
       }
       break;
   }
