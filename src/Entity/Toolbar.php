@@ -159,10 +159,10 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
           }
 
           // Check to see if we have empty regions after access checks.
-          foreach ($allItemsByRegion as $regionId => $regionItems) {
-            if (!isset($itemsByRegion[$regionId])) {
+          foreach ($allItemsByRegion as $rid => $regionItems) {
+            if (!isset($itemsByRegion[$rid])) {
               // We have an empty region which may be toggled by an item.
-              $regionItemId = str_replace('item:', '', $regionId);
+              $regionItemId = str_replace('item:', '', $rid);
               if (isset($items[$regionItemId])) {
                 // If we do have a triggering item, we need to remove it from
                 // the items list as well as the items by region list.
@@ -173,7 +173,7 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
           }
 
           // Check sibling access for each item in a region.
-          foreach ($itemsByRegion as $regionId => $regionItems) {
+          foreach ($itemsByRegion as $rid => $regionItems) {
             $removeRegionItems = array_filter($regionItems, function ($item, $key) use ($regionItems) {
               $keys = array_keys($regionItems);
               $found_index = array_search($key, $keys);
@@ -193,10 +193,10 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
       }
       $this->items = $items;
     }
-    $items = $this->items;
 
+    $items = $this->items;
     if ($regionId) {
-      $items = array_filter($this->items, fn($item) => $item->getRegionId() === $regionId);
+      $items = array_filter($items, fn($item) => $item->getRegionId() === $regionId);
     }
     if ($cacheableMetadata) {
       $cacheableMetadata->addCacheableDependency($this->itemsCacheableMetadata);
