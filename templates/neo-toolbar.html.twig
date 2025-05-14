@@ -13,7 +13,7 @@
 #}
 {% if regions.top_start or regions.top_end %}
   <aside class="
-    neo-toolbar neo-toolbar--top flex fixed top-0 right-0 left-displace-l bg-base-0 text-base-content-0 z-50 overflow-x-auto scheme-dark ui
+    neo-toolbar neo-toolbar--top flex fixed top-0 right-0 left-displace-l bg-base-0 text-base-content-0 z-50 overflow-x-auto scrollbar-none scheme-dark ui
   " data-offset-top="">
     <div class="flex items-center grow">
       {{ regions.top_start }}
@@ -22,7 +22,7 @@
   </aside>
 {% endif %}
 {% if regions.side_start or regions.side_end %}
-  <aside class="neo-toolbar neo-toolbar--side flex fixed top-0 h-lvh left-0 bg-base-0 text-base-content-0 z-50 overflow-x-auto ui" data-offset-left="">
+  <aside class="neo-toolbar neo-toolbar--side flex fixed top-0 h-lvh left-0 bg-base-0 text-base-content-0 z-50 overflow-x-auto scrollbar-none ui" data-offset-left="">
      <div class="flex flex-col grow">
       {{ regions.side_start }}
       {{ regions.side_end }}
