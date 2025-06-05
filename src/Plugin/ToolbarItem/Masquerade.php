@@ -11,7 +11,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\masquerade\Form\MasqueradeForm;
 use Drupal\masquerade\Masquerade as MasqueradeCore;
-use Drupal\neo_icon\IconTranslationTrait;
+use Drupal\neo_icon\IconTrait;
 use Drupal\neo_toolbar\Attribute\ToolbarItem;
 use Drupal\neo_toolbar\ToolbarItemElement;
 use Drupal\neo_toolbar\ToolbarItemPluginBase;
@@ -31,7 +31,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 final class Masquerade extends ToolbarItemPluginBase {
   use ToolbarItemLinkTrait;
   use ToolbarItemRegionTrait;
-  use IconTranslationTrait;
+  use IconTrait;
 
   /**
    * The masquerade service.
