@@ -14,7 +14,7 @@ use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\neo_icon\IconTranslationTrait;
+use Drupal\neo_icon\IconTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\Request;
  */
 final class ToolbarItemListBuilder extends ConfigEntityListBuilder implements FormInterface {
 
-  use IconTranslationTrait;
+  use IconTrait;
 
   /**
    * The form builder.
