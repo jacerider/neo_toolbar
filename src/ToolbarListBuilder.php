@@ -7,14 +7,14 @@ namespace Drupal\neo_toolbar;
 use Drupal\Core\Config\Entity\DraggableListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
-use Drupal\neo_icon\IconTranslationTrait;
+use Drupal\neo_icon\IconTrait;
 
 /**
  * Provides a listing of toolbars.
  */
 final class ToolbarListBuilder extends DraggableListBuilder {
 
-  use IconTranslationTrait;
+  use IconTrait;
 
   /**
    * {@inheritdoc}
