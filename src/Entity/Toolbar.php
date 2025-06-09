@@ -189,8 +189,41 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
             }, ARRAY_FILTER_USE_BOTH);
             $items = array_diff_key($items, $removeRegionItems);
           }
+
+          // Handle region items that may need to be restored based on their
+          // children state.
+          foreach ($itemsByRegion as $rid => $regionItems) {
+            // Check if this is a dynamically generated region created by an
+            // item. If region is in this list it has items.
+            if (strpos($rid, 'item:region') === 0) {
+              // Extract the ID of the item that created this region.
+              $triggeringItemId = substr($rid, 5);
+
+              // Check if the triggering item exists in any region.
+              $triggeringItemExists = FALSE;
+              foreach ($itemsByRegion as $regionId => $i) {
+                if (isset($items[$triggeringItemId])) {
+                  $triggeringItemExists = TRUE;
+                  break;
+                }
+              }
+
+              // If the triggering item doesn't exist in any active region but
+              // its region has items, we need to restore the triggering item.
+              if (!$triggeringItemExists) {
+                foreach ($allItemsByRegion as $regionId => $originalItems) {
+                  if (isset($originalItems[$triggeringItemId])) {
+                    $items[$triggeringItemId] = $originalItems[$triggeringItemId];
+                    break;
+                  }
+                }
+              }
+            }
+          }
+
         }
       }
+
       $this->items = $items;
     }
 
