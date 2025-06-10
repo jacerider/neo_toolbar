@@ -201,7 +201,7 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
 
               // Check if the triggering item exists in any region.
               $triggeringItemExists = FALSE;
-              foreach ($itemsByRegion as $regionId => $i) {
+              foreach ($itemsByRegion as $rid => $i) {
                 if (isset($items[$triggeringItemId])) {
                   $triggeringItemExists = TRUE;
                   break;
@@ -211,7 +211,7 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
               // If the triggering item doesn't exist in any active region but
               // its region has items, we need to restore the triggering item.
               if (!$triggeringItemExists) {
-                foreach ($allItemsByRegion as $regionId => $originalItems) {
+                foreach ($allItemsByRegion as $rid => $originalItems) {
                   if (isset($originalItems[$triggeringItemId])) {
                     $items[$triggeringItemId] = $originalItems[$triggeringItemId];
                     break;
