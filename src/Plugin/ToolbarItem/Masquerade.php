@@ -130,6 +130,8 @@ final class Masquerade extends ToolbarItemPluginBase {
     }
     $this->linkProcessElement($element, 'internal:/masquerade');
     $this->processRegionElementAsModal($element, $this->icon('Masquerade as User', $this->getIcon()), $build);
+    // Open wider.
+    $element->getModal()->setWidth('600px');
     return $element;
   }
 
