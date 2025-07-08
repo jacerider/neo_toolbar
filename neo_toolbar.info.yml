@@ -5,6 +5,7 @@ package: Neo
 version: 0.0.0
 core_version_requirement: ^10.3 || ^11
 dependencies:
+  - drupal:token
   - neo:neo
   - neo_modal:neo_modal
   - neo_tooltip:neo_tooltip
