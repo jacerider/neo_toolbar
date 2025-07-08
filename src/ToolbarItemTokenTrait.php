@@ -2,6 +2,7 @@
 
 namespace Drupal\neo_toolbar;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 
 /**
@@ -32,7 +33,29 @@ trait ToolbarItemTokenTrait {
           'class' => ['m-0'],
         ],
       ],
+      '#element_validate' => [
+        [static::class, 'tokenValidate'],
+      ],
     ];
+  }
+
+  /**
+   * Validate the token element.
+   *
+   * Removes the token element from the form state values to prevent it
+   * from being saved as part of the configuration.
+   *
+   * @param array $element
+   *   The token element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public static function tokenValidate(array $element, FormStateInterface $form_state) {
+    $parents = $element['#parents'];
+    array_pop($parents);
+    $values = $form_state->getValue($parents);
+    unset($values['token']);
+    $form_state->setValue($parents, $values);
   }
 
   /**
