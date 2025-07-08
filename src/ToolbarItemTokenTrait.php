@@ -4,6 +4,7 @@ namespace Drupal\neo_toolbar;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\user\Entity\User;
 
 /**
  * A trait that provides token utilities.
@@ -65,8 +66,11 @@ trait ToolbarItemTokenTrait {
    *   The entered plain text with tokens replaced.
    */
   protected function tokenReplace($markup, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL) {
-    $currentUser = \Drupal::currentUser();
-    $data['user'] = $currentUser->getAccount();
+    $account = \Drupal::currentUser()->id();
+    $user = User::load($account);
+    if ($user) {
+      $data['user'] = $user;
+    }
     return $this->getToken()->replace($markup, $data, $options, $bubbleable_metadata);
   }
 
