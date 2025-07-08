@@ -14,7 +14,7 @@ plugin: favicon
 weight: -2
 settings:
   url: 'internal:/'
-  target: 0
+  target: false
   image: 'public://neo-favicon/mstile-150x150.png'
   scheme: scheme-primary-solid
 visibility: {  }

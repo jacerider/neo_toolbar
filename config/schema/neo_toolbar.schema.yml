@@ -46,6 +46,7 @@ neo_toolbar.neo_toolbar_item.*:
       label: 'Weight'
     settings:
       type: neo_toolbar_item.settings.[%parent.plugin]
+      nullable: true
     visibility:
       type: sequence
       label: 'Visibility Conditions'
@@ -71,3 +72,57 @@ neo_toolbar_item_settings:
       label: 'Context assignments'
       sequence:
         type: string
+
+neo_toolbar_item.settings.link:
+  type: neo_toolbar_item_settings
+  mapping:
+    url:
+      type: string
+      label: URL
+    token:
+      type: mapping
+      label: Token
+      mapping:
+        tokens:
+          type: string
+          label: Tokens
+    target:
+      type: boolean
+      label: Open in new window
+    icon:
+      type: string
+      label: Icon
+    badge:
+      type: mapping
+      label: Badge
+      mapping:
+        type:
+          type: string
+          label: Badge Type
+
+neo_toolbar_item.settings.localactions:
+  type: neo_toolbar_item_settings
+  mapping:
+    url:
+      type: string
+      label: URL
+    token:
+      type: mapping
+      label: Token
+      mapping:
+        tokens:
+          type: string
+          label: Tokens
+    target:
+      type: boolean
+      label: Open in new window
+    icon:
+      type: string
+      label: Icon
+    badge:
+      type: mapping
+      label: Badge
+      mapping:
+        type:
+          type: string
+          label: Badge Type

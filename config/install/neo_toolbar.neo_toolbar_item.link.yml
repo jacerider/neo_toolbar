@@ -12,9 +12,7 @@ plugin: link
 weight: -1
 settings:
   url: 'internal:/admin/content'
-  token:
-    tokens: ''
-  target: 0
+  target: false
   icon: file-alt
   badge:
     type: ''

@@ -13,9 +13,7 @@ plugin: link
 weight: -2
 settings:
   url: 'internal:/user'
-  token:
-    tokens: ''
-  target: 0
+  target: false
   icon: user-circle
   badge:
     type: ''

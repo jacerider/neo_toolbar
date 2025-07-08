@@ -13,9 +13,7 @@ plugin: link
 weight: -1
 settings:
   url: 'internal:/user/[user:uid]/edit'
-  token:
-    tokens: ''
-  target: 0
+  target: false
   icon: user-cog
   badge:
     type: ''

@@ -13,9 +13,7 @@ plugin: link
 weight: 0
 settings:
   url: 'internal:/user/logout'
-  token:
-    tokens: ''
-  target: 0
+  target: false
   icon: sign-out-alt
   badge:
     type: ''

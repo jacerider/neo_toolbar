@@ -12,9 +12,7 @@ plugin: link
 weight: 0
 settings:
   url: 'internal:/admin/people'
-  token:
-    tokens: ''
-  target: 0
+  target: false
   icon: user-lock
   badge:
     type: ''
