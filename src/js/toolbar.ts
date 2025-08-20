@@ -9,5 +9,3 @@
   };
 
 })(Drupal, Drupal.displace);
-
-export {};

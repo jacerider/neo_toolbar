@@ -1,6 +1,6 @@
 toolbar:
   version: VERSION
-  neo: { group: contrib }
+  neo: true
   js:
     src/js/toolbar.ts: {}
   dependencies:
