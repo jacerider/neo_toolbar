@@ -8,6 +8,7 @@ use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Template\Attribute;
 use Drupal\neo_icon\IconRepositoryTrait;
 use Drupal\neo_modal\Modal;
@@ -350,7 +351,22 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @return $this
    */
   public function setDynamicIcon(string|MarkupInterface $text): self {
-    if ($icon = $this->loadIcon($text, NULL, NULL, ['admin'])) {
+    // Entity will be found in the route parameters.
+    $prefix = ['admin'];
+    $route_match = \Drupal::routeMatch();
+    if (($route = $route_match->getRouteObject()) && ($parameters = $route->getOption('parameters'))) {
+      // Determine if the current route represents an entity.
+      foreach ($parameters as $name => $options) {
+        if (isset($options['type']) && strpos($options['type'], 'entity:') === 0) {
+          $entity = $route_match->getParameter($name);
+          if ($entity instanceof EntityInterface) {
+            $prefix[] = 'entity';
+            $prefix[] = 'entity.' . $entity->getEntityTypeId();
+          }
+        }
+      }
+    }
+    if ($icon = $this->loadIcon($text, NULL, NULL, $prefix)) {
       $this->setIcon($icon->getName());
     }
     return $this;
