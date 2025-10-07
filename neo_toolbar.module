@@ -18,9 +18,13 @@ function neo_toolbar_page_top(array &$page_top) {
   if (!neo_toolbar_toolbar_view_access()) {
     return;
   }
+
   /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
   $repository = \Drupal::service('neo_toolbar.repository');
   if ($toolbar = $repository->getActive()) {
+    // Remove the core toolbar if it exists.
+    unset($page_top['toolbar']);
+
     $page_top['neo_toolbar'] = [
       '#type' => 'neo_toolbar',
       '#toolbar' => $toolbar,
@@ -31,6 +35,51 @@ function neo_toolbar_page_top(array &$page_top) {
       ],
     ];
   }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function neo_toolbar_module_implements_alter(&$implementations, $hook) {
+  switch ($hook) {
+    // Move our hook_page_top() implementation to the end of the list.
+    case 'page_top':
+      $group = $implementations['neo_toolbar'];
+      unset($implementations['neo_toolbar']);
+      $implementations['neo_toolbar'] = $group;
+      break;
+  }
+}
+
+/**
+ * Generic access callback for the toolbar.
+ *
+ * @return bool
+ *   TRUE if the current user has access to the toolbar, FALSE otherwise.
+ */
+function neo_toolbar_toolbar_view_access(): bool {
+  $cache = drupal_static(__FUNCTION__);
+  if (isset($cache)) {
+    return $cache;
+  }
+  $access = \Drupal::currentUser()->hasPermission('access neo_toolbar');
+  if (
+    $access &&
+    \Drupal::currentUser()->id() !== '1' &&
+    \Drupal::moduleHandler()->moduleExists('toolbar') &&
+    \Drupal::currentUser()->hasPermission('access toolbar')
+  ) {
+    // If core toolbar is enabled and user has access, do not show neo_toolbar.
+    // This does not apply to user 1 who will always see neo_toolbar.
+    return FALSE;
+  }
+  // If masquerading, we assume toolbar access.
+  if (!$access && \Drupal::hasService('masquerade')) {
+    $masquerade = \Drupal::service('masquerade');
+    return $masquerade->isMasquerading();
+  }
+  $cache = $access;
+  return $access;
 }
 
 /**
@@ -61,22 +110,6 @@ function neo_toolbar_block_access(BlockInterface $block, $operation, AccountInte
       }
       break;
   }
-}
-
-/**
- * Generic access callback for the toolbar.
- *
- * @return bool
- *   TRUE if the current user has access to the toolbar, FALSE otherwise.
- */
-function neo_toolbar_toolbar_view_access(): bool {
-  $access = \Drupal::currentUser()->hasPermission('access neo_toolbar');
-  // If masquerading, we assume toolbar access.
-  if (!$access && \Drupal::hasService('masquerade')) {
-    $masquerade = \Drupal::service('masquerade');
-    return $masquerade->isMasquerading();
-  }
-  return $access;
 }
 
 /**
