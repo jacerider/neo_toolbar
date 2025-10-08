@@ -49,8 +49,8 @@ final class LocalActions extends ToolbarItemPluginBase {
     $plugin_id,
     $plugin_definition,
     TransliterationInterface $transliteration,
-    LocalActionManagerInterface $local_task_manager,
-    RouteMatchInterface $route_match,
+    ?LocalActionManagerInterface $local_task_manager = NULL,
+    ?RouteMatchInterface $route_match = NULL,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $transliteration);
     $this->localActionManager = $local_task_manager;
