@@ -55,8 +55,8 @@ final class Masquerade extends ToolbarItemPluginBase {
     $plugin_id,
     $plugin_definition,
     TransliterationInterface $transliteration,
-    MasqueradeCore $masquerade,
-    FormBuilderInterface $form_builder,
+    ?MasqueradeCore $masquerade = NULL,
+    ?FormBuilderInterface $form_builder = NULL,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $transliteration);
     $this->masquerade = $masquerade;
