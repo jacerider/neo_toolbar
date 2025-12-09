@@ -16,6 +16,7 @@ use Drupal\neo_toolbar\ToolbarItemElement;
 use Drupal\neo_toolbar\ToolbarItemPluginBase;
 use Drupal\neo_toolbar\ToolbarItemLinkTrait;
 use Drupal\neo_toolbar\ToolbarItemRegionTrait;
+use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -36,7 +37,7 @@ final class User extends ToolbarItemPluginBase {
    *
    * @var \Drupal\user\UserInterface
    */
-  protected $currentUser;
+  protected UserInterface $currentUser;
 
   /**
    * Creates a toolbar item instance.
