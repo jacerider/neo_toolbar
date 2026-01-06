@@ -776,6 +776,11 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
     $modal->setContentAnimateIn('slideInLeft');
     $modal->setContentAnimateOut('slideOutLeft');
     $modal->setContentPadding('0px');
+    $modal->setContentScroll(TRUE);
+    $modal->setHeaderColor('rgb(var(--color-base-950))');
+    $modal->setHeaderColorBg('rgb(var(--color-base-0))');
+    $modal->setContentColor('rgb(var(--color-base-950))');
+    $modal->setContentColorBg('rgb(var(--color-base-0))');
     $this->modal = $modal;
     return $this;
   }
