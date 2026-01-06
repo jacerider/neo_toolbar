@@ -8,9 +8,11 @@
  * @ingroup themeable
  */
 #}
-<div class="neo-toolbar--modal flex flex-col py-4 gap-2">
+<div class="neo-toolbar--modal flex flex-col py-4 {% if title %}pt-0{% endif %} gap-2">
   {% if title %}
-    <h2 class="flex items-center gap-2 min-h-8 mb-3 font-bold px-7">{{ title }}</h2>
+    <div class="sticky top-0 z-10 bg-base-0 px-4">
+      <h2 class="flex items-center gap-2 min-h-10 py-4 font-bold px-3 border-b">{{ title }}</h2>
+    </div>
   {% endif %}
   {{ content }}
 </div>
