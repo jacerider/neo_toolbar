@@ -47,7 +47,8 @@
 %}
 {%
   set title_classes = [
-    'hidden md:block whitespace-nowrap',
+    'whitespace-nowrap',
+    style != 'modal' ? 'hidden md:block',
     alignment == 'horizontal' and style != 'modal' ? 'text-xs',
   ]
 %}
