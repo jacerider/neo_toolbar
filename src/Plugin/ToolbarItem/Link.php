@@ -21,7 +21,7 @@ use Drupal\neo_toolbar\ToolbarItemPluginBase;
   label: new TranslatableMarkup('Link'),
   description: new TranslatableMarkup('Internal or external link.'),
 )]
-final class Link extends ToolbarItemPluginBase {
+class Link extends ToolbarItemPluginBase {
   use ToolbarItemLinkTrait;
   use ToolbarItemBadgeTrait;
 
