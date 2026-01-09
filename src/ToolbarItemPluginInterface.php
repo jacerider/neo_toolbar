@@ -9,13 +9,17 @@ use Drupal\Component\Plugin\DerivativeInspectionInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\CacheableDependencyInterface;
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\Plugin\PluginWithFormsInterface;
 use Drupal\Core\Session\AccountInterface;
 
 /**
  * Interface for neo_toolbar_item plugins.
  */
-interface ToolbarItemPluginInterface extends ConfigurableInterface, PluginFormInterface, PluginInspectionInterface, CacheableDependencyInterface, DerivativeInspectionInterface {
+interface ToolbarItemPluginInterface extends ConfigurableInterface, PluginFormInterface, PluginInspectionInterface, CacheableDependencyInterface, DerivativeInspectionInterface, ContextAwarePluginInterface, ContainerFactoryPluginInterface, RefinableCacheableDependencyInterface, PluginWithFormsInterface {
 
   /**
    * Returns the translated plugin label.
