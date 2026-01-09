@@ -59,7 +59,7 @@ final class ToolbarItemLibraryController extends ControllerBase {
       ['data' => $this->t('Operations')],
     ];
 
-    // Only add blocks which work without any available context.
+    // Only add items which work without any available context.
     $definitions = $this->toolbarItemManager->getDefinitionsForContexts($this->contextRepository->getAvailableContexts());
     // Order by category, and then by admin label.
     $definitions = $this->toolbarItemManager->getSortedDefinitions($definitions);
