@@ -8,6 +8,7 @@
 use Drupal\block\BlockInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Template\Attribute;
 
 /**
  * Implements hook_page_top().
@@ -140,8 +141,9 @@ function neo_toolbar_theme(): array {
     ],
     'neo_toolbar_modal' => [
       'variables' => [
-        'title' => NULL,
         'content' => [],
+        'title' => NULL,
+        'title_attributes' => [],
       ],
     ],
     'neo_toolbar_element' => [
@@ -212,4 +214,17 @@ function neo_toolbar_theme_suggestions_neo_toolbar_element(array $variables) {
 function template_preprocess_neo_toolbar_region(array &$variables): void {
   $variables['alignment'] = $variables['region']->getAlignment();
   $variables['position'] = $variables['region']->getPosition();
+}
+
+/**
+ * Prepares variables for neo-toolbar-modal.html.twig template.
+ *
+ * Default template: neo-toolbar-modal.html.twig.
+ *
+ * @param array $variables
+ *   An associative array.
+ */
+function template_preprocess_neo_toolbar_modal(array &$variables): void {
+  $variables['title_attributes'] = new Attribute($variables['title_attributes'] ?? []);
+  // $variables['attributes']['class'][] = 'neo-toolbar--modal';
 }
