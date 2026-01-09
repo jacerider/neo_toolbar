@@ -755,14 +755,17 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    *   The modal content.
    * @param string|null $title
    *   The modal title.
+   * @param array $titleAttributes
+   *   The modal title attributes.
    *
    * @return $this
    */
-  public function setModal($content, $title = NULL): self {
+  public function setModal($content, $title = NULL, $titleAttributes = []): self {
     $build = [
       '#theme' => 'neo_toolbar_modal',
       '#title' => $title,
       '#content' => $content,
+      '#title_attributes' => $titleAttributes,
     ];
     $modal = new Modal($build);
     $modal->setPlacementToLeft();
