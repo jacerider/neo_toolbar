@@ -105,9 +105,7 @@ final class LinkLocalTasks extends Link {
       }
       if (!$collection->isEmpty()) {
         $build = $collection->toRenderable();
-        $element->setModal($build, $this->configuration['title']);
-        // $element->getModal()->setTitle($this->configuration['title']);
-        // $element->getModal()->setIcon($this->configuration['icon']);
+        $element->setModal($build, $this->configuration['title'], ['class' => ['px-3']]);
       }
     }
     catch (\Exception $e) {
