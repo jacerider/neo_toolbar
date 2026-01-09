@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Drupal\neo_toolbar;
 
+use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Transliteration\TransliterationInterface;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
-use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Plugin\ContextAwarePluginAssignmentTrait;
-use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Plugin\ContextAwarePluginTrait;
-use Drupal\Core\Plugin\PluginWithFormsInterface;
 use Drupal\Core\Plugin\PluginWithFormsTrait;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -29,7 +29,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @phpstan-consistent-constructor
  */
-abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPluginInterface, RefinableCacheableDependencyInterface, PluginWithFormsInterface, ContextAwarePluginInterface, ContainerFactoryPluginInterface {
+abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPluginInterface {
   use DependencySerializationTrait;
   use RefinableCacheableDependencyTrait;
   use PluginWithFormsTrait;
@@ -37,6 +37,13 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
   use ContextAwarePluginTrait;
   use StringTranslationTrait;
   use ToolbarItemTokenTrait;
+
+  /**
+   * The context repository service.
+   *
+   * @var \Drupal\Core\Plugin\Context\ContextRepositoryInterface
+   */
+  protected ContextRepositoryInterface $contextRepository;
 
   /**
    * The toolbar this plugin belongs to.
@@ -50,20 +57,21 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
    *
    * @var \Drupal\Component\Transliteration\TransliterationInterface
    */
-  protected $transliteration;
+  protected TransliterationInterface $transliteration;
 
   /**
    * Creates a toolbar item instance.
    */
   public function __construct(
     array $configuration,
-    $plugin_id,
+    string $plugin_id,
     $plugin_definition,
     TransliterationInterface $transliteration,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->transliteration = $transliteration;
     $this->setConfiguration($configuration);
+    $this->setDefinedContextValues();
   }
 
   /**
@@ -76,6 +84,24 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
       $plugin_definition,
       $container->get('transliteration')
     );
+  }
+
+  /**
+   * Set values for the defined contexts of this plugin.
+   */
+  protected function setDefinedContextValues() {
+    $plugin_context_definitions = $this->getContextDefinitions();
+    if (empty($plugin_context_definitions)) {
+      return;
+    }
+    $available_contexts = $this->contextRepository()->getAvailableContexts();
+    $available_runtime_contexts = $this->contextRepository()->getRuntimeContexts(array_keys($available_contexts));
+    foreach ($plugin_context_definitions as $name => $plugin_context_definition) {
+      $matches = $this->contextHandler()
+        ->getMatchingContexts($available_runtime_contexts, $plugin_context_definition);
+      $matching_context = reset($matches);
+      $this->setContextValue($name, $matching_context->getContextValue());
+    }
   }
 
   /**
@@ -278,6 +304,16 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
    * {@inheritdoc}
    */
   public function access(AccountInterface $account, $return_as_object = FALSE) {
+    foreach ($this->getContextDefinitions() as $name => $definition) {
+      if ($definition->isRequired()) {
+        try {
+          $this->getContextValue($name);
+        }
+        catch (ContextException $e) {
+          return $return_as_object ? AccessResult::forbidden() : FALSE;
+        }
+      }
+    }
     $access = $this->itemAccess($account);
     return $return_as_object ? $access : $access->isAllowed();
   }
@@ -325,6 +361,14 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
    */
   public function getCacheTags() {
     $tags = $this->cacheTags;
+    // Applied contexts can affect the cache tags when this plugin is
+    // involved in caching, collect and return them.
+    foreach ($this->getContexts() as $context) {
+      /** @var \Drupal\Core\Cache\CacheableDependencyInterface $context */
+      if ($context instanceof CacheableDependencyInterface) {
+        $tags = Cache::mergeTags($tags, $context->getCacheTags());
+      }
+    }
     return $tags;
   }
 
@@ -333,6 +377,14 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
    */
   public function getCacheContexts() {
     $cache_contexts = $this->cacheContexts;
+    // Applied contexts can affect the cache contexts when this plugin is
+    // involved in caching, collect and return them.
+    foreach ($this->getContexts() as $context) {
+      /** @var \Drupal\Core\Cache\CacheableDependencyInterface $context */
+      if ($context instanceof CacheableDependencyInterface) {
+        $cache_contexts = Cache::mergeContexts($cache_contexts, $context->getCacheContexts());
+      }
+    }
     return $cache_contexts;
   }
 
@@ -341,7 +393,25 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
    */
   public function getCacheMaxAge() {
     $max_age = $this->cacheMaxAge;
+    // Applied contexts can affect the cache max age when this plugin is
+    // involved in caching, collect and return them.
+    foreach ($this->getContexts() as $context) {
+      /** @var \Drupal\Core\Cache\CacheableDependencyInterface $context */
+      if ($context instanceof CacheableDependencyInterface) {
+        $max_age = Cache::mergeMaxAges($max_age, $context->getCacheMaxAge());
+      }
+    }
     return $max_age;
+  }
+
+  /**
+   * Gets the context repository service.
+   *
+   * @return \Drupal\Core\Plugin\Context\ContextRepositoryInterface
+   *   The context repository service.
+   */
+  protected function contextRepository() {
+    return $this->contextRepository ?? \Drupal::service('context.repository');
   }
 
 }
