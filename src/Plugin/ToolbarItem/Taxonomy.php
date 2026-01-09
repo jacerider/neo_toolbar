@@ -5,17 +5,13 @@ declare(strict_types=1);
 namespace Drupal\neo_toolbar\Plugin\ToolbarItem;
 
 use Drupal\Component\Transliteration\TransliterationInterface;
-use Drupal\Core\Entity\EntityType;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\CurrentRouteMatch;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\neo_icon\IconRepositoryTrait;
-use Drupal\neo_icon\IconTrait;
 use Drupal\neo_toolbar\Attribute\ToolbarItem;
-use Drupal\neo_toolbar\ToolbarItemBadgeTrait;
 use Drupal\neo_toolbar\ToolbarItemCollection;
 use Drupal\neo_toolbar\ToolbarItemElement;
 use Drupal\neo_toolbar\ToolbarItemLinkTrait;
@@ -119,6 +115,7 @@ class Taxonomy extends ToolbarItemPluginBase {
         $itemElement = new ToolbarItemElement($vocabulary->id(), $vocabulary->label(), 'horizontal');
         $vocabularyUrl = $vocabulary->toUrl('overview-form');
         $this->linkProcessElement($itemElement, $vocabularyUrl);
+        $itemElement->setWeight($vocabulary->get('weight'));
         if ($currentRouteVocabulary && $currentRouteVocabulary->id() === $vocabulary->id()) {
           $this->linkProcessElement($element, $vocabularyUrl);
         }
@@ -133,9 +130,7 @@ class Taxonomy extends ToolbarItemPluginBase {
     }
     if (!$collection->isEmpty()) {
       $build = $collection->toRenderable();
-      $element->setModal($build, $this->configuration['title']);
-      // $element->getModal()->setTitle($this->configuration['title']);
-      // $element->getModal()->setIcon('tags');
+      $element->setModal($build, $this->configuration['title'], ['class' => ['px-3']]);
     }
 
     return $element;
