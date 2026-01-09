@@ -11,7 +11,7 @@
 <div class="neo-toolbar--modal flex flex-col py-4 {% if title %}pt-0{% endif %} gap-2">
   {% if title %}
     <div class="sticky top-0 z-10 bg-base-0 px-4">
-      <h2 class="flex items-center gap-2 min-h-10 py-4 font-bold px-3 border-b">{{ title }}</h2>
+      <h2 {{ title_attributes.addClass('flex items-center gap-2 min-h-10 py-4 font-bold border-b') }}>{{ title }}</h2>
     </div>
   {% endif %}
   {{ content }}
