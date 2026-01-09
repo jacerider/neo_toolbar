@@ -27,14 +27,20 @@ final class ToolbarItem extends AttributeBase {
    *   (optional) A brief description of the plugin.
    * @param string|null $region_create
    *   (optional) Whether the plugin should create a new region.
+   * @param \Drupal\Core\Plugin\Context\ContextDefinitionInterface[] $context_definitions
+   *   (optional) An array of context definitions describing the context used by
+   *   the plugin. The array is keyed by context names.
    * @param class-string|null $deriver
    *   (optional) The deriver class.
+   * @param string|null $provider
+   *   (optional) The module that provides this plugin.
    */
   public function __construct(
     public readonly string $id,
     public readonly ?TranslatableMarkup $label,
     public readonly ?TranslatableMarkup $description = NULL,
     public readonly ?bool $region_create = FALSE,
+    public readonly array $context_definitions = [],
     public readonly ?string $deriver = NULL,
     public ?string $provider = NULL,
   ) {}
