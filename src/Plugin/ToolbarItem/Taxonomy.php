@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Drupal\neo_toolbar\Plugin\ToolbarItem;
 
 use Drupal\Component\Transliteration\TransliterationInterface;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\CurrentRouteMatch;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\neo_icon\IconRepositoryTrait;
@@ -93,6 +95,14 @@ class Taxonomy extends ToolbarItemPluginBase {
    */
   public function getIcon(): string|null {
     return 'tags';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function itemAccess(AccountInterface $account) {
+    return Url::fromRoute('entity.taxonomy_vocabulary.collection')
+      ->access($account) ? AccessResult::allowed() : AccessResult::forbidden();
   }
 
   /**
