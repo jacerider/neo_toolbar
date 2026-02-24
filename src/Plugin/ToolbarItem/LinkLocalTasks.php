@@ -47,8 +47,8 @@ final class LinkLocalTasks extends Link {
     $plugin_id,
     $plugin_definition,
     TransliterationInterface $transliteration,
-    LocalTaskManagerInterface $local_task_manager,
-    CurrentRouteMatch $current_route_match,
+    LocalTaskManagerInterface $local_task_manager = NULL,
+    CurrentRouteMatch $current_route_match = NULL,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $transliteration);
     $this->localTaskManager = $local_task_manager;
