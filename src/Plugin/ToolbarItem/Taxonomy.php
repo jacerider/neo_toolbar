@@ -55,8 +55,8 @@ class Taxonomy extends ToolbarItemPluginBase {
     $plugin_id,
     $plugin_definition,
     TransliterationInterface $transliteration,
-    EntityTypeManagerInterface $entity_type_manager,
-    CurrentRouteMatch $current_route_match,
+    EntityTypeManagerInterface $entity_type_manager = NULL,
+    CurrentRouteMatch $current_route_match = NULL,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $transliteration);
     $this->entityTypeManager = $entity_type_manager;
