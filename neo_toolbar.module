@@ -39,6 +39,16 @@ function neo_toolbar_page_top(array &$page_top) {
 }
 
 /**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function neo_toolbar_local_tasks_alter(&$definitions) {
+  if (isset($definitions['entity.media.collection'])) {
+    // Move media collection to its own tab.
+    $definitions['entity.media.collection']['base_route'] = 'entity.media.collection';
+  }
+}
+
+/**
  * Implements hook_module_implements_alter().
  */
 function neo_toolbar_module_implements_alter(&$implementations, $hook) {
@@ -170,6 +180,9 @@ function neo_toolbar_theme(): array {
     'neo_toolbar_element__divider' => [
       'base hook' => 'neo_toolbar_element',
     ],
+    'neo_toolbar_element__grid' => [
+      'base hook' => 'neo_toolbar_element',
+    ],
   ];
 }
 
@@ -198,6 +211,7 @@ function neo_toolbar_theme_suggestions_neo_toolbar_item(array $variables) {
  */
 function neo_toolbar_theme_suggestions_neo_toolbar_element(array $variables) {
   $suggestions = [];
+  $suggestions[] = 'neo_toolbar_element__' . $variables['style'];
   $suggestions[] = 'neo_toolbar_element__' . $variables['id'];
   $suggestions[] = 'neo_toolbar_element__' . $variables['id'] . '__' . $variables['alignment'];
   return $suggestions;
