@@ -185,7 +185,9 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
       ];
 
       foreach ($this->elements as $element) {
-        $element->setStyle($style);
+        if (!$element->isStyleForced()) {
+          $element->setStyle($style);
+        }
         $build['#elements'][] = $element->toRenderable();
       }
     }
