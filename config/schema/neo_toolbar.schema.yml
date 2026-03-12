@@ -126,3 +126,49 @@ neo_toolbar_item.settings.localactions:
         type:
           type: string
           label: Badge Type
+
+neo_toolbar_item.settings.create:
+  type: neo_toolbar_item_settings
+  mapping:
+    icon:
+      type: string
+      label: Icon
+    scheme:
+      type: string
+      label: Color Scheme
+    node_enabled:
+      type: boolean
+      label: 'Enable content'
+    node_bundles:
+      type: sequence
+      label: 'Content types'
+      sequence:
+        type: string
+        label: 'Content type'
+    node_exclude:
+      type: boolean
+      label: 'Exclude selected content types'
+    taxonomy_enabled:
+      type: boolean
+      label: 'Enable taxonomy'
+    taxonomy_bundles:
+      type: sequence
+      label: 'Taxonomy vocabularies'
+      sequence:
+        type: string
+        label: 'Vocabulary'
+    taxonomy_exclude:
+      type: boolean
+      label: 'Exclude selected vocabularies'
+    media_enabled:
+      type: boolean
+      label: 'Enable media'
+    media_bundles:
+      type: sequence
+      label: 'Media types'
+      sequence:
+        type: string
+        label: 'Media type'
+    media_exclude:
+      type: boolean
+      label: 'Exclude selected media types'
