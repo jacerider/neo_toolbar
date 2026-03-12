@@ -1,0 +1,64 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display neo_toolbar_region.
+ *
+ * Available variables:
+ * - foo: Foo variable description.
+ *
+ * @see template_preprocess_neo_toolbar_region()
+ *
+ * @ingroup themeable
+ */
+#}
+{%
+  set classes = [
+    'flex flex-col items-center gap-2 border-2 rounded p-2 text-default hover:bg-base-100 hover:border-primary-500 hover:scale-105 transition leading-none',
+  ]
+%}
+{%
+  set title_classes = [
+    'text-[10px]',
+  ]
+%}
+{%
+  set image_classes = [
+  ]
+%}
+{%
+  set image_size = image_size is defined ? image_size : {
+    width: alignment == 'vertical' ? 50 : 40,
+    height: alignment == 'vertical' ? 50 : 40,
+  }
+%}
+{%
+  set icon_classes = [
+    'text-default text-3xl',
+  ]
+%}
+{%
+  set badge_classes = [
+  ]
+%}
+{{ before }}
+<{{ tag }}{{ attributes.addClass('neo-toolbar--element relative', classes) }}>
+  {% if badge %}
+    <div{{ badge_attributes.addClass(badge_classes) }}>{{ badge }}</div>
+  {% endif %}
+  {% if image %}
+    {% block image %}
+      {{ neo_image_style(image, {cropSides: 1, scale: image_size}, NULL, NULL, image_attributes.addClass(image_classes)) }}
+    {% endblock %}
+  {% elseif icon %}
+    {% block icon %}
+      {{ icon(icon)|icon_class(icon_classes) }}
+    {% endblock %}
+  {% endif %}
+  {% if title %}
+    {% block title %}
+      <span{{ title_attributes.addClass(title_classes) }}>{{ title }}</span>
+    {% endblock %}
+  {% endif %}
+</{{ tag }}>
+{{ after }}
+{{ children }}
