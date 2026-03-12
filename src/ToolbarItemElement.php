@@ -21,7 +21,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   use IconRepositoryTrait;
   use RefinableCacheableDependencyTrait;
 
-  /**
+  /**$
    * The toolbar item element ID.
    *
    * @var string
@@ -41,6 +41,13 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @var string
    */
   protected $style = 'default';
+
+  /**
+   * Whether the toolbar item element style is forced.
+   *
+   * @var bool
+   */
+  protected $styleForce = FALSE;
 
   /**
    * The toolbar item element access property.
@@ -230,9 +237,22 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    *
    * @return $this
    */
-  public function setStyle(string $style): self {
+  public function setStyle(string $style, $force = FALSE): self {
+    if ($force) {
+      $this->styleForce = TRUE;
+    }
     $this->style = $style;
     return $this;
+  }
+
+  /**
+   * Get whether the toolbar item element style is forced.
+   *
+   * @return bool
+   *   Whether the toolbar item element style is forced.
+   */
+  public function isStyleForced(): bool {
+    return $this->styleForce;
   }
 
   /**
