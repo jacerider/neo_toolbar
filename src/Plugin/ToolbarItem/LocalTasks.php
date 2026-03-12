@@ -113,6 +113,7 @@ final class LocalTasks extends ToolbarItemPluginBase {
 
     $cacheableMetadata = new CacheableMetadata();
     $primary = $this->localTaskManager->getLocalTasks($this->routeMatch->getRouteName(), 0);
+    uasort($primary['tabs'], '\Drupal\Component\Utility\SortArray::sortByWeightProperty');
     $secondary = $this->localTaskManager->getLocalTasks($this->routeMatch->getRouteName(), 1);
     $cacheableMetadata->addCacheableDependency($this->localTaskManager);
     // If the current route belongs to an entity, include cache tags of that
@@ -125,7 +126,7 @@ final class LocalTasks extends ToolbarItemPluginBase {
     }
     $cacheableMetadata = $cacheableMetadata->merge($primary['cacheability']);
     $cacheableMetadata = $cacheableMetadata->merge($secondary['cacheability']);
-    if (count(Element::getVisibleChildren($primary['tabs'])) > 1) {
+    if (count(Element::getVisibleChildren($primary['tabs'])) > 1 || count(Element::getVisibleChildren($secondary['tabs'])) > 1) {
       foreach ($primary['tabs'] as $primary_tab) {
         $element = $this->getElement();
         $element->setTitle($primary_tab['#link']['title']);
@@ -136,7 +137,13 @@ final class LocalTasks extends ToolbarItemPluginBase {
           $element->setDynamicIcon($primary_tab['#link']['title']);
         }
         $element->setAccess($primary_tab['#access']);
-        $element->setWeight($primary_tab['#weight']);
+        $weight = $primary_tab['#weight'];
+        if (empty($primary_tab['#active']) && $this->showAsTooltip($primary_tab)) {
+          $element->showTitle(FALSE);
+          $element->showTooltip(TRUE);
+          $weight += 100;
+        }
+        $element->setWeight($weight);
         $this->linkProcessElement($element, $primary_tab['#link']['url']);
 
         if (!empty($primary_tab['#active'])) {
@@ -146,8 +153,10 @@ final class LocalTasks extends ToolbarItemPluginBase {
             foreach ($secondary['tabs'] as $secondary_tab) {
               $child = $this->getElement();
               $child->setTitle($secondary_tab['#link']['title']);
-              $child->showTitle(FALSE);
-              $child->showTooltip(TRUE);
+              if (empty($secondary_tab['#active'])) {
+                $child->showTitle(FALSE);
+                $child->showTooltip(TRUE);
+              }
               $child->setIcon($this->configuration['alignment'] === 'vertical' ? 'circle' : '');
               $child->setDynamicIcon($secondary_tab['#link']['title']);
               $child->setAccess($secondary_tab['#access']);
@@ -163,6 +172,21 @@ final class LocalTasks extends ToolbarItemPluginBase {
     $this->addCacheableDependency($cacheableMetadata);
 
     return $elements;
+  }
+
+  protected function showAsTooltip($primaryTab): bool {
+    $routeName = $primaryTab['#link']['url']->getRouteName();
+    // If route name matches entity.*.canonical, show as tooltip.
+    if (preg_match('/^entity\.[^.]+\.canonical$/', $routeName)) {
+      return FALSE;
+    }
+    if (preg_match('/^entity\.[^.]+\.alchemist$/', $routeName)) {
+      return FALSE;
+    }
+    if (preg_match('/^entity\.[^.]+\.edit_form$/', $routeName)) {
+      return FALSE;
+    }
+    return TRUE;
   }
 
 }
