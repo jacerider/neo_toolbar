@@ -33,15 +33,12 @@
       items-center justify-center bg-base-200 text-default h-7 md:h-10
       hover:bg-base-100 hover:text-base-100-content hover:border-primary-500 hover:is-active:border-primary-600
       is-active:bg-primary-500 is-active:border-primary-500 is-active:text-primary-500-content
-      dark:hover:border-base-200 dark:hover:bg-base-100
-      dark:is-active:bg-primary-500
-      dark:is-active:hover:border-primary-600
     ',
-    style == 'pill' and alignment == 'horizontal' ? 'first:rounded-l-md last:rounded-r-md last-of-type:rounded-r-md md:first:rounded-l-xl md:last:rounded-r-xl md:last-of-type:rounded-r-xl',
-    style == 'pill' and alignment == 'vertical' ? 'first:rounded-t-xl last:rounded-b-xl last-of-type:rounded-b-xl',
-    style == 'pill_nested' ? 'items-center justify-center bg-primary-400 text-primary-400-content h-8 text-sm hover:border-primary-800 hover:text-primary-400-content is-active:bg-primary-800 is-active:border-primary-800 is-active:text-primary-800-content',
-    style == 'pill_nested' and alignment == 'horizontal' ? 'first:rounded-l last:rounded-r last-of-type:rounded-r md:first:rounded-l-lg md:last:rounded-r-lg md:last-of-type:rounded-r-lg',
-    style == 'pill_nested' and alignment == 'vertical' ? 'first:rounded-t-lg last:rounded-b-lg last-of-type:rounded-b-lg',
+    style == 'pill' and alignment == 'horizontal' ? 'first:rounded-l-md last:rounded-r-md md:first:rounded-l-xl md:last:rounded-r-xl',
+    style == 'pill' and alignment == 'vertical' ? 'first:rounded-t-xl last:rounded-b-xl',
+    style == 'pill_nested' ? 'items-center justify-center bg-primary-400 text-primary-400-content text-sm hover:border-primary-800 hover:text-primary-400-content is-active:bg-primary-800 is-active:border-primary-800 is-active:text-primary-800-content',
+    style == 'pill_nested' and alignment == 'horizontal' ? 'first:rounded-l last:rounded-r md:first:rounded-l-lg md:last:rounded-r-lg',
+    style == 'pill_nested' and alignment == 'vertical' ? 'first:rounded-t-lg last:rounded-b-lg',
     style == 'modal' ? 'items-center rounded-xl bg-base-0 text-default hover:bg-base-100 hover:text-base-100-content hover:border-primary-500 is-active:bg-primary-500 is-active:border-primary-500 is-active:text-primary-500-content h-10',
     image ? 'is-active:bg-base-500',
   ]

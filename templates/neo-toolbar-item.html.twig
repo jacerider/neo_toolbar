@@ -17,17 +17,26 @@
     alignment == 'vertical' ? 'flex-col',
     style == 'default' ? 'gap-2',
     style == 'default' and alignment == 'vertical' ? 'px-1 md:px-2',
-    style == 'pill' ? 'rounded-xl',
+    style == 'pill' ? '',
+    style == 'pill' and alignment == 'horizontal' ? 'rounded md:rounded-xl overflow-hidden',
     style == 'pill' and alignment == 'vertical' ? 'mx-2',
     style == 'pill_nested' ? 'bg-primary-500',
-    style == 'pill_nested' and alignment == 'horizontal' ? 'items-center justify-center pl-0 pr-1 last:rounded-r-xl',
+    style == 'pill_nested' and alignment == 'horizontal' ? 'items-center justify-center pl-0 md:p-1',
     style == 'pill_nested' and alignment == 'vertical' ? 'last:rounded-b-xl p-1 pt-0',
     style == 'modal' ? 'flex-col gap-2 px-4',
     style == 'grid' ? 'grid grid-cols-2 gap-2 px-2 md:px-3',
   ]
 %}
 <div{{ attributes.addClass('neo-toolbar--item', classes) }}>
+  {% if style == 'pill_nested' and alignment == 'horizontal' %}
+    <div class="flex h-full rounded md:rounded-lg overflow-hidden">
+  {% endif %}
+
   {% block elements %}
     {{ elements }}
   {% endblock %}
+
+  {% if style == 'pill_nested' and alignment == 'horizontal' %}
+    </div>
+  {% endif %}
 </div>
