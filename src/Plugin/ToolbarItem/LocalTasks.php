@@ -137,13 +137,11 @@ final class LocalTasks extends ToolbarItemPluginBase {
           $element->setDynamicIcon($primary_tab['#link']['title']);
         }
         $element->setAccess($primary_tab['#access']);
-        $weight = $primary_tab['#weight'];
         if (empty($primary_tab['#active']) && $this->showAsTooltip($primary_tab)) {
           $element->showTitle(FALSE);
           $element->showTooltip(TRUE);
-          $weight += 100;
         }
-        $element->setWeight($weight);
+        $element->setWeight($primary_tab['#weight']);
         $this->linkProcessElement($element, $primary_tab['#link']['url']);
 
         if (!empty($primary_tab['#active'])) {
