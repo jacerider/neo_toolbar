@@ -126,6 +126,18 @@ interface ToolbarItemPluginInterface extends ConfigurableInterface, PluginFormIn
   public function accessBySiblings(?ToolbarItemInterface $previous = NULL, ?ToolbarItemInterface $next = NULL): AccessResultInterface;
 
   /**
+   * Whether the toolbar item should be rendered using a placeholder.
+   *
+   * When TRUE, the item will be rendered via a lazy builder with
+   * #create_placeholder, allowing route-dependent content to bypass
+   * the parent render cache.
+   *
+   * @return bool
+   *   TRUE if the item should use a placeholder.
+   */
+  public function createPlaceholder(): bool;
+
+  /**
    * Suggests a machine name to identify an instance of this item.
    *
    * The item plugin need not verify that the machine name is at all unique. It

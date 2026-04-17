@@ -93,6 +93,13 @@ final class LocalActions extends ToolbarItemPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function createPlaceholder(): bool {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getIcon(): string|null {
     return 'bahai';
   }
@@ -113,7 +120,6 @@ final class LocalActions extends ToolbarItemPluginBase {
     $route_name = $this->routeMatch->getRouteName();
     $local_actions = $this->localActionManager->getActionsForRoute($route_name);
     $cacheableMetadata = CacheableMetadata::createFromRenderArray($local_actions);
-
     foreach (Element::children($local_actions) as $key) {
       $action = $local_actions[$key];
       $element = $this->getElement();
@@ -123,6 +129,8 @@ final class LocalActions extends ToolbarItemPluginBase {
       $element->setDynamicIcon($action['#link']['title']);
       /** @var \Drupal\Core\Url $url */
       $url = $action['#link']['url'];
+      // Render it to ensure CSRF tokens are correct.
+      $url->toString();
       if (!empty($action['#link']['localized_options']['query'])) {
         $url->setOption('query', $action['#link']['localized_options']['query']);
       }

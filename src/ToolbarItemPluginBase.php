@@ -180,6 +180,13 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
   /**
    * {@inheritdoc}
    */
+  public function createPlaceholder(): bool {
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getElements(): array {
     $element = $this->getElement();
     return [$element];
