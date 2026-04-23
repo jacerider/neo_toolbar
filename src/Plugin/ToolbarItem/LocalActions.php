@@ -93,13 +93,6 @@ final class LocalActions extends ToolbarItemPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function createPlaceholder(): bool {
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getIcon(): string|null {
     return 'bahai';
   }
