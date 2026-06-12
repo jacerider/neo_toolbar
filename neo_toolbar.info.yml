@@ -3,7 +3,7 @@ type: module
 description: 'Provides a toolbar that shows the top-level administration menu items and links from other modules.'
 package: Neo
 neo: true
-version: 0.0.0
+version: 1.0.45
 core_version_requirement: ^10.3 || ^11
 dependencies:
   - drupal:token
