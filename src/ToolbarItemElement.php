@@ -21,7 +21,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   use IconRepositoryTrait;
   use RefinableCacheableDependencyTrait;
 
-  /**$
+  /**
    * The toolbar item element ID.
    *
    * @var string
@@ -90,6 +90,13 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @var string
    */
   protected $image = '';
+
+  /**
+   * The toolbar item element image size.
+   *
+   * @var array|null
+   */
+  protected $imageSize = NULL;
 
   /**
    * The toolbar item element badge.
@@ -234,6 +241,9 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    *
    * @param string $style
    *   The toolbar item element style.
+   * @param bool $force
+   *   Whether to force the toolbar item element style, preventing it from being
+   *   overridden by child elements.
    *
    * @return $this
    */
@@ -423,6 +433,34 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    */
   public function getImage(): string {
     return $this->image;
+  }
+
+  /**
+   * Set the toolbar item element image size.
+   *
+   * @param int $width
+   *   The image width.
+   * @param int|null $height
+   *   The image height. Defaults to the width when not provided.
+   *
+   * @return $this
+   */
+  public function setImageSize(int $width, ?int $height = NULL): self {
+    $this->imageSize = [
+      'width' => $width,
+      'height' => $height ?? $width,
+    ];
+    return $this;
+  }
+
+  /**
+   * Get the toolbar item element image size.
+   *
+   * @return array|null
+   *   The toolbar item element image size, or NULL when not set.
+   */
+  public function getImageSize(): ?array {
+    return $this->imageSize;
   }
 
   /**
@@ -848,6 +886,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
       '#title' => $titleStatus ? $title : '',
       '#icon' => $icon,
       '#image' => $image,
+      '#image_size' => $this->getImageSize(),
       '#badge' => $this->getBadge(),
       '#attributes' => $this->attributes,
       '#title_attributes' => $this->titleAttributes,

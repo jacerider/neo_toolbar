@@ -16,13 +16,12 @@
     'flex gap-2 grow transition border-2',
     image ? 'border-base-200' : 'border-transparent',
     'overflow-hidden',
-    'focus:outline-2 focus:outline-primary-500 color:focus:outline-black',
+    'focus:outline-2 focus:outline-primary-500 color:focus:outline-primary-600',
     alignment == 'horizontal' ? 'px-2 md:px-3',
     style == 'default' ? '
       items-center justify-center bg-base-0 text-default
       hover:bg-base-100 hover:text-base-100-content hover:border-primary-500
       is-active:bg-base-200 is-active:text-default is-active:border-primary-500
-      color:hover:border-base-100 color:is-active:bg-base-0
       rounded-md
       md:rounded-xl
     ',
@@ -53,7 +52,7 @@
   ]
 %}
 {%
-  set image_size = image_size is defined ? image_size : {
+  set image_size = image_size is defined and image_size ? image_size : {
     width: alignment == 'vertical' ? 50 : 40,
     height: alignment == 'vertical' ? 50 : 40,
   }

@@ -165,6 +165,7 @@ function neo_toolbar_theme(): array {
         'title' => NULL,
         'icon' => NULL,
         'image' => NULL,
+        'image_size' => NULL,
         'badge' => NULL,
         'url' => NULL,
         'attributes' => NULL,
