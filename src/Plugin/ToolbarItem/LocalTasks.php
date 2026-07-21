@@ -172,15 +172,30 @@ final class LocalTasks extends ToolbarItemPluginBase {
     return $elements;
   }
 
-  protected function showAsTooltip($primaryTab): bool {
+  /**
+   * Determines whether the primary tab should be shown as a tooltip.
+   */
+  protected function showAsTooltip(array $primaryTab): bool {
     $routeName = $primaryTab['#link']['url']->getRouteName();
-    // If route name matches entity.*.canonical, show as tooltip.
+    // If route is taxonomy overview, no tooltip. This is a special case because
+    // the overview page is not an entity canonical route, but it is still a
+    // page that should not have a tooltip.
+    if ($routeName === 'entity.taxonomy_vocabulary.overview_form') {
+      return FALSE;
+    }
+    // If route name matches entity.*.field_ui.alchemist, no tooltip.
+    if (preg_match('/^entity\.[^.]+\.field_ui.alchemist$/', $routeName)) {
+      return FALSE;
+    }
+    // If route name matches entity.*.canonical, no tooltip.
     if (preg_match('/^entity\.[^.]+\.canonical$/', $routeName)) {
       return FALSE;
     }
+    // If route name matches entity.*.alchemist, no tooltip.
     if (preg_match('/^entity\.[^.]+\.alchemist$/', $routeName)) {
       return FALSE;
     }
+    // If route name matches entity.*.edit_form, no tooltip.
     if (preg_match('/^entity\.[^.]+\.edit_form$/', $routeName)) {
       return FALSE;
     }
