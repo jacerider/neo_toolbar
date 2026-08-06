@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\neo_toolbar\Plugin\ToolbarItem;
 
 use Drupal\Component\Transliteration\TransliterationInterface;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Menu\LocalActionManagerInterface;
@@ -115,9 +116,18 @@ final class LocalActions extends ToolbarItemPluginBase {
     $cacheableMetadata = CacheableMetadata::createFromRenderArray($local_actions);
     foreach (Element::children($local_actions) as $key) {
       $action = $local_actions[$key];
+      $access = $action['#access'] ?? TRUE;
+      // Skip actions the user cannot reach. Building them anyway would leave
+      // the item with nothing but inaccessible elements, which still renders
+      // the item wrapper and shows up as an empty toolbar item. The access
+      // cacheability is already covered by $cacheableMetadata, which the local
+      // action manager populates from every action's access result.
+      if ($access instanceof AccessResultInterface ? !$access->isAllowed() : !$access) {
+        continue;
+      }
       $element = $this->getElement();
       $element->setTitle($action['#link']['title']);
-      $element->setAccess($action['#access']);
+      $element->setAccess($access);
       $element->setWeight($action['#weight'] ?? 0);
       $element->setDynamicIcon($action['#link']['title']);
       /** @var \Drupal\Core\Url $url */
@@ -128,18 +138,18 @@ final class LocalActions extends ToolbarItemPluginBase {
         $url->setOption('query', $action['#link']['localized_options']['query']);
       }
       if (!empty($action['#link']['localized_options']['attributes'])) {
-        foreach ($action['#link']['localized_options']['attributes'] as $key => $value) {
-          if ($key === 'data-dialog-type') {
+        foreach ($action['#link']['localized_options']['attributes'] as $name => $value) {
+          if ($name === 'data-dialog-type') {
             $element->addLibrary('core/drupal.dialog.ajax');
           }
-          if ($key === 'class') {
+          if ($name === 'class') {
             $value = is_array($value) ? $value : explode(' ', $value);
             foreach ($value as $class) {
               $element->addClass($class);
             }
           }
           else {
-            $element->setAttribute($key, $value);
+            $element->setAttribute($name, $value);
           }
         }
       }

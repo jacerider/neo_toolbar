@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\neo_toolbar;
 
+use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\neo\Helpers\Str;
@@ -129,6 +130,14 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
   public function add(ToolbarItemElement $element): self {
     $this->elements[] = $element;
     $this->addCacheableDependency($element);
+    // Inaccessible elements are dropped from the render array, so their access
+    // cacheability has to be collected here. Waiting for the element to be
+    // rendered is too late; callers read the collection's cacheability before
+    // asking whether it has anything to render.
+    $access = $element->getAccess();
+    if ($access instanceof CacheableDependencyInterface) {
+      $this->addCacheableDependency($access);
+    }
     return $this;
   }
 
@@ -158,13 +167,28 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
   }
 
   /**
-   * Checks if the collection is empty.
+   * Gets the toolbar elements the current user has access to.
+   *
+   * @return \Drupal\neo_toolbar\ToolbarItemElement[]
+   *   The accessible toolbar items.
+   */
+  public function accessible(): array {
+    return array_filter($this->elements, static function (ToolbarItemElement $element) {
+      return $element->isAccessible();
+    });
+  }
+
+  /**
+   * Checks if the collection has anything to render.
+   *
+   * Elements the current user cannot access do not count, otherwise the item
+   * wrapper would be rendered around nothing.
    *
    * @return bool
    *   TRUE if the collection is empty, FALSE otherwise.
    */
   public function isEmpty(): bool {
-    return empty($this->elements);
+    return empty($this->accessible());
   }
 
   /**
@@ -175,7 +199,7 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
    */
   public function toRenderable(): array {
     $build = [];
-    if (!empty($this->elements)) {
+    if ($elements = $this->accessible()) {
       $style = $this->getStyle();
       $build = [
         '#theme' => 'neo_toolbar_item',
@@ -184,7 +208,7 @@ class ToolbarItemCollection implements RefinableCacheableDependencyInterface {
         '#weight' => $this->getWeight(),
       ];
 
-      foreach ($this->elements as $element) {
+      foreach ($elements as $element) {
         if (!$element->isStyleForced()) {
           $element->setStyle($style);
         }

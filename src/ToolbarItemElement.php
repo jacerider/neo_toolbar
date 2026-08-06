@@ -6,6 +6,7 @@ namespace Drupal\neo_toolbar;
 
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Entity\EntityInterface;
@@ -296,6 +297,17 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    */
   public function getAccess(): AccessResult|bool {
     return $this->access;
+  }
+
+  /**
+   * Check whether the toolbar item element will be rendered.
+   *
+   * @return bool
+   *   TRUE if the element is accessible, FALSE otherwise.
+   */
+  public function isAccessible(): bool {
+    $access = $this->getAccess();
+    return $access instanceof AccessResultInterface ? $access->isAllowed() : $access;
   }
 
   /**
