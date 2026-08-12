@@ -127,6 +127,23 @@ neo_toolbar_item.settings.localactions:
           type: string
           label: Badge Type
 
+neo_toolbar_item.settings.region:
+  type: neo_toolbar_item_settings
+  mapping:
+    url:
+      type: string
+      label: URL
+    token:
+      type: mapping
+      label: Token
+      mapping:
+        tokens:
+          type: string
+          label: Tokens
+    icon:
+      type: string
+      label: Icon
+
 neo_toolbar_item.settings.create:
   type: neo_toolbar_item_settings
   mapping:
