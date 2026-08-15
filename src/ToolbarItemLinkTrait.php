@@ -2,6 +2,7 @@
 
 namespace Drupal\neo_toolbar;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\Element\EntityAutocomplete;
@@ -243,11 +244,32 @@ trait ToolbarItemLinkTrait {
         $href = $generated_url->getGeneratedUrl();
 
         if ($url->isRouted()) {
-          // Set data element for active link setting.
-          // @todo Drupal's active-link.js seems to not work for this. Why?
+          // Set data elements for active link setting.
           $system_path = $url->getInternalPath();
           // Special case for the front page.
           $attributes['data-drupal-link-system-path'] = $system_path == '' ? '<front>' : $system_path;
+
+          // Query parameters are half of the contract. core/drupal.active-link
+          // compares BOTH the system path and the query, reading the query from
+          // `data-drupal-link-query` and treating a missing attribute as "no
+          // query at all" — so a link to /foo?a=1 without it matches plain
+          // /foo, and every such item lights up at once.
+          //
+          // That is what the old "active-link.js seems to not work for this"
+          // note was seeing: the path attribute was emitted alone, so a group
+          // of items separated only by their query (?type=inverter,
+          // ?type=panel …) all read as current on the bare path, and any item
+          // pointing at the front page with a parameter read as current on
+          // every visit to the front page.
+          //
+          // Mirrors \Drupal\Core\Utility\LinkGenerator::generate(), ksort and
+          // all — active-link.js compares the JSON of its own sorted copy, so
+          // the ordering is load-bearing, not tidiness.
+          $query = $url->getOption('query');
+          if (!empty($query)) {
+            ksort($query);
+            $attributes['data-drupal-link-query'] = Json::encode($query);
+          }
         }
       }
       $attributes['href'] = $href;

@@ -845,7 +845,13 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
     $modal->setNest(FALSE);
     $modal->setDisplaceTop('0px');
     $modal->setZindex(60);
-    $modal->setCloseButton('end-out');
+    // 'end', not 'end-out'. The "-out" slot is absolutely positioned at
+    // `left: 100%` with the header's own background, so on this panel — 300px
+    // wide, flush against the toolbar — the close renders as a detached white
+    // square floating in the page beside the flyout rather than as part of it.
+    // Inside the header it sits at the panel's top-right, opposite the title,
+    // which is where the control belongs and where people look for it.
+    $modal->setCloseButton('end');
     $modal->setContentAnimateIn('slideInLeft');
     $modal->setContentAnimateOut('slideOutLeft');
     $modal->setContentPadding('0px');
