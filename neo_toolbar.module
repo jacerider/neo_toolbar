@@ -112,8 +112,8 @@ function neo_toolbar_block_access(BlockInterface $block, $operation, AccountInte
       break;
 
     case 'local_tasks_block':
-      // Hide local actions block if user can use the toolbar AND the local tasks
-      // plugin is enabled.
+      // Hide local actions block if the user can use the toolbar AND the
+      // local tasks plugin is enabled.
       /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
       $repository = \Drupal::service('neo_toolbar.repository');
       if ($repository->hasToolbarItemsOfType('local_tasks')) {

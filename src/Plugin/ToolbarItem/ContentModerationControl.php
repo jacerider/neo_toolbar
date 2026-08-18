@@ -71,9 +71,9 @@ class ContentModerationControl extends ToolbarItemPluginBase {
     $plugin_id,
     $plugin_definition,
     TransliterationInterface $transliteration,
-    ModerationInformationInterface $moderation_info = NULL,
-    EntityTypeManagerInterface $entity_type_manager = NULL,
-    CurrentRouteMatch $current_route_match = NULL,
+    ?ModerationInformationInterface $moderation_info = NULL,
+    ?EntityTypeManagerInterface $entity_type_manager = NULL,
+    ?CurrentRouteMatch $current_route_match = NULL,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $transliteration);
     $this->moderationInfo = $moderation_info;

@@ -46,7 +46,7 @@ class Create extends ToolbarItemPluginBase {
     $plugin_id,
     $plugin_definition,
     TransliterationInterface $transliteration,
-    EntityTypeManagerInterface $entity_type_manager = NULL,
+    ?EntityTypeManagerInterface $entity_type_manager = NULL,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $transliteration);
     $this->entityTypeManager = $entity_type_manager;
