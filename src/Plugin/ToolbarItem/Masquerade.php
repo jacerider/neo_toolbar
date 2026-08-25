@@ -27,6 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   label: new TranslatableMarkup('Masquerade'),
   description: new TranslatableMarkup('Masquerade integration.'),
   provider: 'masquerade',
+  icon: 'user-secret',
 )]
 final class Masquerade extends ToolbarItemPluginBase {
   use ToolbarItemLinkTrait;
@@ -75,13 +76,6 @@ final class Masquerade extends ToolbarItemPluginBase {
       $container->get('masquerade'),
       $container->get('form_builder')
     );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getIcon(): string|null {
-    return 'user-secret';
   }
 
   /**

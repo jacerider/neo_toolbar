@@ -24,6 +24,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   id: 'local_actions',
   label: new TranslatableMarkup('Local Actions'),
   description: new TranslatableMarkup('The local actions of the current page.'),
+  icon: 'bahai',
 )]
 final class LocalActions extends ToolbarItemPluginBase {
   use ToolbarItemLinkTrait;
@@ -89,13 +90,6 @@ final class LocalActions extends ToolbarItemPluginBase {
     ];
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getIcon(): string|null {
-    return 'bahai';
   }
 
   /**

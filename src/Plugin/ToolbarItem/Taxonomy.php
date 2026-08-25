@@ -28,6 +28,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   label: new TranslatableMarkup('Taxonomy'),
   description: new TranslatableMarkup('Taxonomy management within a modal.'),
   provider: 'taxonomy',
+  icon: 'tags',
 )]
 class Taxonomy extends ToolbarItemPluginBase {
   use ToolbarItemLinkTrait;
@@ -88,13 +89,6 @@ class Taxonomy extends ToolbarItemPluginBase {
     }
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getIcon(): string|null {
-    return 'tags';
   }
 
   /**

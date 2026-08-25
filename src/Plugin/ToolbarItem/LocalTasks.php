@@ -24,6 +24,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   id: 'local_tasks',
   label: new TranslatableMarkup('Local Tasks'),
   description: new TranslatableMarkup('The local tasks of the current page.'),
+  icon: 'dot-circle',
 )]
 final class LocalTasks extends ToolbarItemPluginBase {
   use ToolbarItemLinkTrait;
@@ -89,13 +90,6 @@ final class LocalTasks extends ToolbarItemPluginBase {
     ];
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getIcon(): string|null {
-    return 'dot-circle';
   }
 
   /**

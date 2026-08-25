@@ -27,6 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   label: new TranslatableMarkup('User'),
   description: new TranslatableMarkup('The user account menu.'),
   region_create: TRUE,
+  icon: 'user-circle',
 )]
 final class User extends ToolbarItemPluginBase {
   use ToolbarItemLinkTrait;
@@ -85,13 +86,6 @@ final class User extends ToolbarItemPluginBase {
     ];
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getIcon(): string|null {
-    return 'user-circle';
   }
 
   /**

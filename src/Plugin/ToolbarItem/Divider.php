@@ -20,6 +20,7 @@ use Drupal\neo_toolbar\ToolbarItemPluginBase;
   id: 'divider',
   label: new TranslatableMarkup('Divider'),
   description: new TranslatableMarkup('A divider between toolbar items.'),
+  icon: 'grip-lines',
 )]
 final class Divider extends ToolbarItemPluginBase {
 
@@ -40,13 +41,6 @@ final class Divider extends ToolbarItemPluginBase {
     ];
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getIcon(): string|null {
-    return 'grip-lines';
   }
 
   /**

@@ -37,6 +37,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
       required: TRUE,
     ),
   ],
+  icon: 'code-merge',
 )]
 class ContentModerationControl extends ToolbarItemPluginBase {
   use ToolbarItemLinkTrait;
@@ -112,13 +113,6 @@ class ContentModerationControl extends ToolbarItemPluginBase {
     ];
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getIcon(): string|null {
-    return 'code-merge';
   }
 
   /**
