@@ -66,68 +66,17 @@ function neo_toolbar_module_implements_alter(&$implementations, $hook) {
 /**
  * Generic access callback for the toolbar.
  *
- * The answer is memoised per account for the life of the request. The gate is
- * consulted once before the toolbar renders and again once per block whose job
- * the toolbar's own items take over, so an admin page with ten blocks would
- * otherwise repeat the permission check, the module check and the masquerade
- * lookup eleven times.
- *
- * The memo is keyed by account id because the current user is a proxy whose
- * account can be replaced within a single PHP process — cron, a queue worker, a
- * test — and a memo keyed on nothing would hand the first account's answer to
- * the second. `drupal_static_reset(__FUNCTION__)` clears it, which is what such
- * a process needs after switching accounts.
+ * The answer, the memo behind it and the collaborators it needs all live on
+ * the `neo_toolbar.access_gate` service; see
+ * \Drupal\neo_toolbar\ToolbarAccessGate::hasAccess(). This function is kept as
+ * a forwarder because it is a global function in a file every site running
+ * this module loads, and a site's own code may call it.
  *
  * @return bool
  *   TRUE if the current user has access to the toolbar, FALSE otherwise.
  */
 function neo_toolbar_toolbar_view_access(): bool {
-  $uid = \Drupal::currentUser()->id();
-  // drupal_static() returns by reference, and taking that reference is what
-  // makes the write at the end of this function outlive the call.
-  $cache = &drupal_static(__FUNCTION__, []);
-  if (isset($cache[$uid])) {
-    return $cache[$uid];
-  }
-  $access = \Drupal::currentUser()->hasPermission('access neo_toolbar');
-  // The two branches below are mutually exclusive by construction: the first
-  // needs the toolbar permission and the second needs its absence. Neither
-  // returns, so every exit leaves through the single write below.
-  //
-  // User 1 is exempt from the first branch, and the exemption is there to stop
-  // an accident rather than to express a preference. Core's own UserSession
-  // answers every permission check for user 1 with TRUE by short-circuit, so on
-  // a site that installs core's toolbar alongside this one, user 1 holds
-  // 'access toolbar' without any site builder having granted it and would be
-  // handed core's toolbar automatically — not because anyone chose it.
-  //
-  // The comparison casts, matching core's own idiom in
-  // UserSession::hasPermission(), because the account id reaches this function
-  // as whatever the database driver put in the row: a driver setting
-  // \PDO::ATTR_STRINGIFY_FETCHES answers the string '1' and one returning
-  // native types answers the integer 1. Comparing against either literal alone
-  // would make one of those two sites behave differently from the other for no
-  // reason a reader could find.
-  //
-  // The same permission short-circuit means user 1 is never denied above and so
-  // never reaches the masquerade branch below: user 1 always sees the Neo
-  // toolbar.
-  if (
-    $access &&
-    (int) $uid !== 1 &&
-    \Drupal::moduleHandler()->moduleExists('toolbar') &&
-    \Drupal::currentUser()->hasPermission('access toolbar')
-  ) {
-    // If core toolbar is enabled and user has access, do not show neo_toolbar.
-    $access = FALSE;
-  }
-  elseif (!$access && \Drupal::hasService('masquerade')) {
-    // If masquerading, we assume toolbar access.
-    $masquerade = \Drupal::service('masquerade');
-    $access = $masquerade->isMasquerading();
-  }
-  $cache[$uid] = $access;
-  return $access;
+  return \Drupal::service('neo_toolbar.access_gate')->hasAccess();
 }
 
 /**

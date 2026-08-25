@@ -7,13 +7,17 @@ namespace Drupal\neo_toolbar_test;
 /**
  * A stand-in for the `masquerade` service.
  *
- * `neo_toolbar_toolbar_view_access()`'s last exit asks
- * `\Drupal::hasService('masquerade')` and then calls `isMasquerading()` on it.
- * The `masquerade` module is not installed on this site — that is also where
- * the module's two `class.notFound` phpstan findings come from — so the real
- * class does not exist to mock. A test registers this into the container under
- * the `masquerade` id instead, which is the only way to reach the gate's one
- * non-deterministic exit.
+ * The gate's last exit calls `isMasquerading()` on whatever was injected as its
+ * optional collaborator, which is typed as a plain nullable object because the
+ * `masquerade` module is not installed on this site — that is also where the
+ * module's `class.notFound` phpstan findings come from — so the real class does
+ * not exist to mock. Having the one method the gate calls is the whole of what
+ * makes this a complete collaborator, and it is the only way to reach the
+ * gate's one non-deterministic exit.
+ *
+ * Its answer is settable after construction so that a test can prove the gate
+ * memo answered rather than the collaborator: the gate holds one instance for
+ * its lifetime, so replacing the object would prove nothing about the memo.
  */
 final class TestMasquerade {
 
@@ -35,6 +39,16 @@ final class TestMasquerade {
    */
   public function isMasquerading(): bool {
     return $this->masquerading;
+  }
+
+  /**
+   * Changes the answer this stand-in gives.
+   *
+   * @param bool $masquerading
+   *   The answer to give from now on.
+   */
+  public function setMasquerading(bool $masquerading): void {
+    $this->masquerading = $masquerading;
   }
 
 }

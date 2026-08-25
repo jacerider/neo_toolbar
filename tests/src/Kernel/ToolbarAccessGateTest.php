@@ -7,6 +7,7 @@ namespace Drupal\Tests\neo_toolbar\Kernel;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\UserSession;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\neo_toolbar\ToolbarAccessGate;
 use Drupal\neo_toolbar_test\TestMasquerade;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -14,26 +15,40 @@ use Drupal\user\UserInterface;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
- * Characterises the toolbar access gate.
+ * Characterises the toolbar access gate, end to end through its forwarder.
  *
- * `neo_toolbar_toolbar_view_access()` is ten lines consulted before the toolbar
- * renders on every authenticated request, and once per block when deciding
- * whether to hide the local tasks and local actions blocks. It reads the
- * module's own permission, defers to core's `toolbar` module when that is
- * enabled and the account may use it, and treats an active masquerade as
- * access.
+ * The gate is ten lines consulted before the toolbar renders on every
+ * authenticated request, and once per block when deciding whether to hide the
+ * local tasks and local actions blocks. It reads the module's own permission,
+ * defers to core's `toolbar` module when that is enabled and the account may
+ * use it, and treats an active masquerade as access.
+ *
+ * Those ten lines now live on the `neo_toolbar.access_gate` service and
+ * `neo_toolbar_toolbar_view_access()` is a one-line forwarder to it, kept
+ * undeprecated because it is a global function in a file every site running
+ * this module loads. Every test below still asks through the function, because
+ * the function is what the module's own callers use and what a site's custom
+ * code may call; the branches themselves are driven with no container at all in
+ * `Drupal\Tests\neo_toolbar\Unit\ToolbarAccessGateTest`.
  *
  * Two behaviours this class first pinned as defects are now fixed, and the
  * assertions that pinned them have been inverted in place:
  *
- * 1. The gate memo is a real reference — `$cache = &drupal_static(__FUNCTION__,
- *    [])` — keyed by account id, so a second call for one account is answered
- *    from it and a second *account* on the proxy gets its own answer.
+ * 1. The gate memo is real and keyed by account id, so a second call for one
+ *    account is answered from it and a second *account* on the proxy gets its
+ *    own answer.
  * 2. All three exits fall through to one write-and-return, so the core toolbar
  *    deferral and the masquerade branch are cached like the plain path. A test
  *    that asks about one account twice with the condition underneath it changed
- *    now needs `drupal_static_reset('neo_toolbar_toolbar_view_access')`, and
- *    two of the tests below say so where they call it.
+ *    has to clear the memo, and several of the tests below say so where they
+ *    do.
+ *
+ * How the memo is cleared is the one thing about this class that the move
+ * changed. It was `drupal_static_reset('neo_toolbar_toolbar_view_access')`;
+ * there is no such static any more, so it is `$this->resetGate()`, which puts
+ * a separately constructed gate in the container. The criterion that named the
+ * static by function name is the single pinned assertion the move inverts, and
+ * it is `testRecomputesInSeparatelyConstructedGate()` below.
  *
  * The third thing this class pins is the user-1 exemption, whose story changed
  * twice. The plan predicted the exemption could never fire, on the grounds
@@ -69,11 +84,12 @@ use PHPUnit\Framework\Attributes\Group;
  * needs the other side of that check uninstalls it inside the method, because
  * the module list is a property of the class.
  *
- * The masquerade branch is reached through the fixtures' stand-in registered
- * into the container under the `masquerade` service id. `masquerade` is not
- * installed on this site — that is also where the module's two
- * `class.notFound` phpstan findings come from — so there is no real class to
- * mock, and this is the gate's only non-deterministic exit.
+ * The masquerade branch is reached through the fixtures' stand-in, handed to a
+ * separately constructed gate by `resetGate()`. `masquerade` is not installed
+ * on this site — that is also where the module's `class.notFound` phpstan
+ * findings come from — so there is no real class to mock, the service
+ * definition's optional reference resolves to NULL here, and this is the gate's
+ * only non-deterministic exit.
  *
  * The super user access policy is on, because this test file does not live
  * under `core`. That is what makes user 1 hold core's `access toolbar` without
@@ -220,7 +236,7 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     $this->assertTrue(neo_toolbar_toolbar_view_access());
 
     // Through a session, which is what `Cookie::getUserFromSession()` does.
-    drupal_static_reset('neo_toolbar_toolbar_view_access');
+    $this->resetGate();
     $this->signIn($this->userOneSession());
     $this->assertTrue(\Drupal::currentUser()->hasPermission('access neo_toolbar'));
     $this->assertTrue(\Drupal::currentUser()->hasPermission('access toolbar'));
@@ -246,7 +262,7 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     $this->assertTrue(\Drupal::currentUser()->hasPermission('access neo_toolbar'));
     $this->assertTrue(neo_toolbar_toolbar_view_access());
 
-    drupal_static_reset('neo_toolbar_toolbar_view_access');
+    $this->resetGate();
     $this->signIn($this->userOneSession());
     $this->assertTrue(neo_toolbar_toolbar_view_access());
   }
@@ -277,7 +293,7 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     // The native integer a driver without that flag produces. The memo is
     // keyed by account id and both halves are account 1, so clearing it is
     // what keeps this a question about the id's type.
-    drupal_static_reset('neo_toolbar_toolbar_view_access');
+    $this->resetGate();
     $this->signIn($this->userOneSession());
     $this->assertSame(1, \Drupal::currentUser()->id());
     $this->assertTrue(neo_toolbar_toolbar_view_access());
@@ -305,7 +321,7 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     $this->assertTrue(\Drupal::currentUser()->hasPermission('access toolbar'));
     $this->assertFalse(neo_toolbar_toolbar_view_access());
 
-    drupal_static_reset('neo_toolbar_toolbar_view_access');
+    $this->resetGate();
     $this->signIn(new UserSession([
       'uid' => (int) $account->id(),
       'name' => 'not_user_one',
@@ -326,22 +342,21 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     $this->assertFalse(\Drupal::currentUser()->hasPermission('access neo_toolbar'));
 
     // Both answers of the stand-in come back as the gate's own answer: the
-    // branch returns what the service says rather than deciding anything.
-    $this->container->set('masquerade', new TestMasquerade(TRUE));
+    // branch returns what the collaborator says rather than deciding anything.
+    $this->resetGate(new TestMasquerade(TRUE));
     $this->assertTrue(neo_toolbar_toolbar_view_access());
 
-    // The gate now memoises per account, so asking the same account again with
-    // the stand-in's answer changed reads the memo rather than the service.
-    // Clearing it is what keeps this an assertion about the service's answer.
-    drupal_static_reset('neo_toolbar_toolbar_view_access');
-    $this->container->set('masquerade', new TestMasquerade(FALSE));
+    // The gate memoises per account, so asking the same account again with the
+    // stand-in's answer changed reads the memo rather than the collaborator.
+    // Clearing it is what keeps this an assertion about the answer given.
+    $this->resetGate(new TestMasquerade(FALSE));
     $this->assertFalse(neo_toolbar_toolbar_view_access());
 
     // The branch is guarded by `!$access`, so an account that already answered
-    // the permission never reaches the service — not even to be overruled by
-    // it. Holding core's toolbar permission too, this account is denied by the
-    // exit above while the stand-in says it is masquerading.
-    $this->container->set('masquerade', new TestMasquerade(TRUE));
+    // the permission never reaches the collaborator — not even to be overruled
+    // by it. Holding core's toolbar permission too, this account is denied by
+    // the exit above while the stand-in says it is masquerading.
+    $this->resetGate(new TestMasquerade(TRUE));
     $this->signIn($this->createAccount('both_and_masquerading', [
       'access neo_toolbar',
       'access toolbar',
@@ -354,27 +369,29 @@ final class ToolbarAccessGateTest extends KernelTestBase {
    *
    * Rewritten from `testRecomputesOnEveryCallBecauseTheCacheNeverStores()`,
    * which pinned the defect as current behaviour: `$cache =
-   * drupal_static(__FUNCTION__)` dropped the reference, so
-   * `assertNull(drupal_static('neo_toolbar_toolbar_view_access'))` held after
-   * every call, and two of the three exits `return`ed before the write besides.
-   * The reference is restored, the memo is keyed by account id and all three
-   * exits fall through to one write, so the pinned assertion inverts: the
-   * static the function names now carries an answer per account, from each of
-   * the three exits in turn.
+   * drupal_static(__FUNCTION__)` dropped the reference, so the memo held
+   * nothing after every call, and two of the three exits `return`ed before the
+   * write besides. The memo is real, keyed by account id, and all three exits
+   * fall through to one write, so the pinned assertion inverts: each of the
+   * three exits leaves an answer behind under its own account id.
+   *
+   * It is a private property on the service now rather than a static this test
+   * can read, so each of the three is shown to have been stored the way a memo
+   * is ever shown to have been stored: the account is asked again with the
+   * condition that decided it taken away, and the answer does not move.
    *
    * Covers: it leaves the module's existing tests green, with the pinned
    * non-caching assertion rewritten.
    */
   public function testTheGateMemoStoresWhatTheOldStaticThrewAway(): void {
+    $masquerade = new TestMasquerade(TRUE);
+    $this->resetGate($masquerade);
+
     // The plainly allowed exit, which was the only one that ever reached the
     // write.
     $first = $this->createAccount('stored_first', ['access neo_toolbar']);
     $this->signIn($first);
     $this->assertTrue(neo_toolbar_toolbar_view_access());
-    $this->assertSame(
-      [(int) $first->id() => TRUE],
-      drupal_static('neo_toolbar_toolbar_view_access'),
-    );
 
     // The core toolbar deferral, which used to `return FALSE` above it.
     $deferred = $this->createAccount('stored_deferred', [
@@ -384,27 +401,50 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     $this->signIn($deferred);
     $this->assertFalse(neo_toolbar_toolbar_view_access());
 
-    // The masquerade exit, which used to `return` the service's answer.
-    $this->container->set('masquerade', new TestMasquerade(TRUE));
+    // The masquerade exit, which used to `return` the collaborator's answer.
     $masquerading = $this->createAccount('stored_masquerading', []);
     $this->signIn($masquerading);
     $this->assertTrue(neo_toolbar_toolbar_view_access());
 
-    $this->assertSame([
-      (int) $first->id() => TRUE,
-      (int) $deferred->id() => FALSE,
-      (int) $masquerading->id() => TRUE,
-    ], drupal_static('neo_toolbar_toolbar_view_access'));
+    // All three are held side by side under their own account ids. The same
+    // account id comes back holding nothing, so a gate that recomputed would
+    // answer FALSE.
+    $this->signIn(new UserSession([
+      'uid' => (int) $first->id(),
+      'name' => 'stored_first',
+      'roles' => ['authenticated'],
+    ]));
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+
+    // The deferred account comes back holding only the module's own
+    // permission, which is the plainly allowed path a recomputing gate would
+    // answer TRUE for.
+    Role::create([
+      'id' => 'stored_neo_only',
+      'label' => 'stored_neo_only',
+      'permissions' => ['access neo_toolbar'],
+    ])->save();
+    $this->signIn(new UserSession([
+      'uid' => (int) $deferred->id(),
+      'name' => 'stored_deferred',
+      'roles' => ['authenticated', 'stored_neo_only'],
+    ]));
+    $this->assertFalse(neo_toolbar_toolbar_view_access());
+
+    // And the stand-in stops masquerading, which a recomputing gate would ask
+    // it about and answer FALSE for.
+    $masquerade->setMasquerading(FALSE);
+    $this->signIn($masquerading);
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
   }
 
   /**
    * A second call for one account is answered by the memo, not by the gate.
    *
-   * The gate memo is `drupal_static(__FUNCTION__)` taken by reference and
-   * keyed by account id. Proving it stores means changing something the gate
-   * would otherwise notice and finding that it does not: the same account id
-   * is put back on the proxy carrying no permissions at all, and the answer
-   * does not move.
+   * The gate memo is a private array on the service, keyed by account id.
+   * Proving it stores means changing something the gate would otherwise notice
+   * and finding that it does not: the same account id is put back on the proxy
+   * carrying no permissions at all, and the answer does not move.
    *
    * Covers: it answers from the gate memo on a second call for the same
    * account.
@@ -471,6 +511,10 @@ final class ToolbarAccessGateTest extends KernelTestBase {
    * `return`ed before the cache write. The stand-in is asked once, then told
    * to stop masquerading; the memo is expected to keep the answer it gave.
    *
+   * The stand-in is told to change its answer rather than replaced, because
+   * the gate holds the collaborator it was constructed with: swapping the
+   * object would prove nothing the memo did.
+   *
    * Covers: it answers the masquerade branch from the memo, which returned
    * before the cache write before.
    */
@@ -478,39 +522,46 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     $this->signIn($this->createAccount('memo_masquerading', []));
     $this->assertFalse(\Drupal::currentUser()->hasPermission('access neo_toolbar'));
 
-    $this->container->set('masquerade', new TestMasquerade(TRUE));
+    $masquerade = new TestMasquerade(TRUE);
+    $this->resetGate($masquerade);
     $this->assertTrue(neo_toolbar_toolbar_view_access());
 
     // The stand-in stops masquerading. A gate that recomputed would ask it
     // again and answer FALSE; a gate that remembers does not ask at all.
-    $this->container->set('masquerade', new TestMasquerade(FALSE));
+    $masquerade->setMasquerading(FALSE);
     $this->assertTrue(neo_toolbar_toolbar_view_access());
   }
 
   /**
-   * The memo is resettable, which is the reason it stayed a `drupal_static()`.
+   * The memo is cleared by constructing another gate.
    *
-   * A plain function `static` could not be cleared from outside; a long-running
-   * drush or queue process that switches accounts, and this test, both need
-   * that. Reset restores the memo to the empty array it was registered with.
+   * This is the one criterion of this class the move inverts, and the only one.
+   * It read "it recomputes after the static is reset under the gate's own
+   * function name", because the memo was `drupal_static(__FUNCTION__)` and
+   * `drupal_static_reset()` could clear it — which a long-running drush or
+   * queue process that switches accounts needs, and so does a test. There is no
+   * such static now: the memo is a private array on the service, per-request by
+   * construction, and cleared by constructing another instance, which is one
+   * line here and one line in a unit test. Every other criterion in this class
+   * survives verbatim, because the forwarder answers what the function
+   * answered.
    *
-   * Covers: it recomputes after the static is reset under the gate's own
-   * function name.
+   * Covers: it recomputes in a separately constructed gate, which is the
+   * criterion that replaces the pinned static reset.
    */
-  public function testRecomputesAfterTheStaticIsResetUnderItsOwnFunctionName(): void {
+  public function testRecomputesInSeparatelyConstructedGate(): void {
     $this->signIn($this->createAccount('resettable', []));
 
-    $this->container->set('masquerade', new TestMasquerade(TRUE));
+    $masquerade = new TestMasquerade(TRUE);
+    $this->resetGate($masquerade);
     $this->assertTrue(neo_toolbar_toolbar_view_access());
 
-    // Still remembered, so the recomputation below is the reset's doing and
-    // nothing else's.
-    $this->container->set('masquerade', new TestMasquerade(FALSE));
+    // Still remembered, so the recomputation below is the second construction's
+    // doing and nothing else's.
+    $masquerade->setMasquerading(FALSE);
     $this->assertTrue(neo_toolbar_toolbar_view_access());
 
-    drupal_static_reset('neo_toolbar_toolbar_view_access');
-    $this->assertSame([], drupal_static('neo_toolbar_toolbar_view_access'));
-
+    $this->resetGate($masquerade);
     $this->assertFalse(neo_toolbar_toolbar_view_access());
   }
 
@@ -541,11 +592,22 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     $this->signIn($first);
     $this->assertTrue(neo_toolbar_toolbar_view_access());
 
-    // Both answers are held side by side, under their own account ids.
-    $this->assertSame([
-      (int) $first->id() => TRUE,
-      (int) $second->id() => FALSE,
-    ], drupal_static('neo_toolbar_toolbar_view_access'));
+    // Both answers are held side by side under their own account ids. The memo
+    // is the service's own private property rather than a static this test can
+    // read, so the second entry is shown the way the first one was: the account
+    // comes back with what decided it reversed, and its answer does not move.
+    Role::create([
+      'id' => 'proxy_second_neo_only',
+      'label' => 'proxy_second_neo_only',
+      'permissions' => ['access neo_toolbar'],
+    ])->save();
+    $this->signIn(new UserSession([
+      'uid' => (int) $second->id(),
+      'name' => 'proxy_second',
+      'roles' => ['authenticated', 'proxy_second_neo_only'],
+    ]));
+    $this->assertTrue(\Drupal::currentUser()->hasPermission('access neo_toolbar'));
+    $this->assertFalse(neo_toolbar_toolbar_view_access());
   }
 
   /**
@@ -578,15 +640,16 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     $allowed = $this->createAccount('every_allowed', ['access neo_toolbar']);
     $this->signIn($allowed);
     $this->assertTrue(neo_toolbar_toolbar_view_access());
-    $expected[(int) $allowed->id()] = TRUE;
+    $expected['every_allowed'] = [$allowed, TRUE];
 
-    // Neither permission, and no masquerade service in the container at all:
-    // denied.
+    // Neither permission, and no masquerade collaborator: denied. The service
+    // definition's optional reference resolves to NULL here, because
+    // `masquerade` is not installed on this site.
     $nobody = $this->createAccount('every_nobody', []);
     $this->signIn($nobody);
     $this->assertFalse(\Drupal::hasService('masquerade'));
     $this->assertFalse(neo_toolbar_toolbar_view_access());
-    $expected[(int) $nobody->id()] = FALSE;
+    $expected['every_nobody'] = [$nobody, FALSE];
 
     // Both permissions, so core's toolbar takes it: denied.
     $both = $this->createAccount('every_both', [
@@ -595,21 +658,24 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     ]);
     $this->signIn($both);
     $this->assertFalse(neo_toolbar_toolbar_view_access());
-    $expected[(int) $both->id()] = FALSE;
+    $expected['every_both'] = [$both, FALSE];
 
-    // No permission, masquerading: allowed.
-    $this->container->set('masquerade', new TestMasquerade(TRUE));
+    // No permission, masquerading: allowed. Handing the stand-in to the gate
+    // clears the memo, so the three above are recomputed by the loop at the
+    // end rather than read back — which is the stronger of the two.
+    $masquerade = new TestMasquerade(TRUE);
+    $this->resetGate($masquerade);
     $masquerading = $this->createAccount('every_masquerading', []);
     $this->signIn($masquerading);
     $this->assertTrue(neo_toolbar_toolbar_view_access());
-    $expected[(int) $masquerading->id()] = TRUE;
+    $expected['every_masquerading'] = [$masquerading, TRUE];
 
     // No permission, not masquerading: denied.
-    $this->container->set('masquerade', new TestMasquerade(FALSE));
+    $masquerade->setMasquerading(FALSE);
     $idle = $this->createAccount('every_idle', []);
     $this->signIn($idle);
     $this->assertFalse(neo_toolbar_toolbar_view_access());
-    $expected[(int) $idle->id()] = FALSE;
+    $expected['every_idle'] = [$idle, FALSE];
 
     // User 1, read back through storage exactly as production hands it to the
     // proxy: allowed, because the deferral exempts it.
@@ -617,9 +683,75 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     $this->signIn($userOne);
     $this->assertSame('1', \Drupal::currentUser()->id());
     $this->assertTrue(neo_toolbar_toolbar_view_access());
-    $expected[1] = TRUE;
+    $expected['user_one'] = [$userOne, TRUE];
 
-    $this->assertSame($expected, drupal_static('neo_toolbar_toolbar_view_access'));
+    // The table again, as answers rather than as a memo this test can read.
+    foreach ($expected as $name => [$account, $answer]) {
+      $this->signIn($account);
+      $this->assertSame($answer, neo_toolbar_toolbar_view_access(), $name);
+    }
+  }
+
+  /**
+   * The forwarder is the service's answer and nothing of its own.
+   *
+   * `neo_toolbar_toolbar_view_access()` survives the move undeprecated,
+   * because it is a global function in a file thirty sites load and any of
+   * them can call it from custom code. What it must not do is answer anything
+   * of its own: every permutation below is asked twice, once through the
+   * function and once of `neo_toolbar.access_gate` directly, and the two are
+   * asserted identical as well as against the answer the permutation has
+   * always produced.
+   *
+   * Covers: it answers through the gate forwarder exactly what it answers when
+   * asked directly.
+   */
+  public function testAnswersThroughTheForwarderExactlyWhatTheServiceAnswers(): void {
+    $this->assertInstanceOf(ToolbarAccessGate::class, \Drupal::service('neo_toolbar.access_gate'));
+
+    $permutations = [
+      // The module's own permission and nothing else: allowed.
+      'forwarded_allowed' => [['access neo_toolbar'], TRUE],
+      // Neither permission and no masquerade collaborator: denied.
+      'forwarded_denied' => [[], FALSE],
+      // Both permissions, so core's toolbar takes it: denied.
+      'forwarded_deferred' => [['access neo_toolbar', 'access toolbar'], FALSE],
+    ];
+    foreach ($permutations as $name => [$permissions, $expected]) {
+      $this->signIn($this->createAccount($name, $permissions));
+      $this->assertSame($expected, neo_toolbar_toolbar_view_access(), $name);
+      $this->assertSame(
+        neo_toolbar_toolbar_view_access(),
+        \Drupal::service('neo_toolbar.access_gate')->hasAccess(),
+        $name,
+      );
+    }
+  }
+
+  /**
+   * Puts a separately constructed gate in the container.
+   *
+   * The gate memo is the service's own private property, so clearing it means
+   * constructing another gate. That is the whole of what
+   * `drupal_static_reset('neo_toolbar_toolbar_view_access')` used to buy here,
+   * and the criterion this class had pinned on that call is now
+   * `testRecomputesInSeparatelyConstructedGate()`.
+   *
+   * The optional collaborator is passed in rather than read from the container,
+   * because `masquerade` is not installed on this site: the service
+   * definition's optional reference resolves to NULL, and a stand-in registered
+   * under that service id would only reach a gate the container had not
+   * constructed yet.
+   *
+   * @param object|null $masquerade
+   *   The masquerade stand-in, or NULL for the shape this site runs.
+   */
+  protected function resetGate(?object $masquerade = NULL): void {
+    $this->container->set('neo_toolbar.access_gate', new ToolbarAccessGate(
+      $this->container->get('current_user'),
+      $this->container->get('module_handler'),
+      $masquerade,
+    ));
   }
 
   /**

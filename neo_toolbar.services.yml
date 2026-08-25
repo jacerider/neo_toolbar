@@ -7,6 +7,14 @@ services:
     class: Drupal\neo_toolbar\ToolbarRegionPluginManager
     arguments: ['@module_handler', '@cache.discovery']
 
+  neo_toolbar.access_gate:
+    class: Drupal\neo_toolbar\ToolbarAccessGate
+    # `masquerade` is neither required nor installed by this module — it is the
+    # provider of one toolbar item plugin and nothing more — so the reference is
+    # the optional one core uses for exactly this shape, and the constructor
+    # parameter it feeds is a plain nullable object.
+    arguments: ['@current_user', '@module_handler', '@?masquerade']
+
   neo_toolbar.repository:
     class: Drupal\neo_toolbar\ToolbarRepository
     arguments: ['@entity_type.manager', '@current_route_match']
