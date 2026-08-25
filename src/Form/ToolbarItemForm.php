@@ -24,13 +24,6 @@ final class ToolbarItemForm extends EntityForm {
   use VisibilityFormTrait;
 
   /**
-   * The block storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $storage;
-
-  /**
    * The plugin form manager.
    *
    * @var \Drupal\Core\Plugin\PluginFormFactoryInterface
@@ -48,12 +41,12 @@ final class ToolbarItemForm extends EntityForm {
    * Constructs a BlockForm object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity manager.
+   *   The entity type manager.
    * @param \Drupal\Core\Plugin\PluginFormFactoryInterface $plugin_form_manager
    *   The plugin form manager.
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, PluginFormFactoryInterface $plugin_form_manager) {
-    $this->storage = $entity_type_manager->getStorage('neo_toolbar_item');
+    $this->entityTypeManager = $entity_type_manager;
     $this->pluginFormFactory = $plugin_form_manager;
   }
 
@@ -180,7 +173,7 @@ final class ToolbarItemForm extends EntityForm {
     $suggestion = $item->getPlugin()->getMachineNameSuggestion();
 
     // Get all the blocks which starts with the suggested machine name.
-    $query = $this->storage->getQuery();
+    $query = $this->entityTypeManager->getStorage('neo_toolbar_item')->getQuery();
     $query->condition('id', $suggestion, 'CONTAINS');
     $item_ids = $query->accessCheck(FALSE)->execute();
 
