@@ -7,6 +7,7 @@
 
 use Drupal\block\BlockInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Template\Attribute;
 
@@ -39,7 +40,7 @@ function neo_toolbar_page_top(array &$page_top) {
 }
 
 /**
- * Implements hook_menu_local_tasks_alter().
+ * Implements hook_local_tasks_alter().
  */
 function neo_toolbar_local_tasks_alter(&$definitions) {
   if (isset($definitions['entity.media.collection'])) {
@@ -65,40 +66,58 @@ function neo_toolbar_module_implements_alter(&$implementations, $hook) {
 /**
  * Generic access callback for the toolbar.
  *
+ * The answer is memoised per account for the life of the request. The gate is
+ * consulted once before the toolbar renders and again once per block whose job
+ * the toolbar's own items take over, so an admin page with ten blocks would
+ * otherwise repeat the permission check, the module check and the masquerade
+ * lookup eleven times.
+ *
+ * The memo is keyed by account id because the current user is a proxy whose
+ * account can be replaced within a single PHP process — cron, a queue worker, a
+ * test — and a memo keyed on nothing would hand the first account's answer to
+ * the second. `drupal_static_reset(__FUNCTION__)` clears it, which is what such
+ * a process needs after switching accounts.
+ *
  * @return bool
  *   TRUE if the current user has access to the toolbar, FALSE otherwise.
  */
 function neo_toolbar_toolbar_view_access(): bool {
-  $cache = drupal_static(__FUNCTION__);
-  if (isset($cache)) {
-    return $cache;
+  $uid = \Drupal::currentUser()->id();
+  // drupal_static() returns by reference, and taking that reference is what
+  // makes the write at the end of this function outlive the call.
+  $cache = &drupal_static(__FUNCTION__, []);
+  if (isset($cache[$uid])) {
+    return $cache[$uid];
   }
   $access = \Drupal::currentUser()->hasPermission('access neo_toolbar');
+  // The two branches below are mutually exclusive by construction: the first
+  // needs the toolbar permission and the second needs its absence. Neither
+  // returns, so every exit leaves through the single write below.
   if (
     $access &&
-    \Drupal::currentUser()->id() !== '1' &&
+    $uid !== '1' &&
     \Drupal::moduleHandler()->moduleExists('toolbar') &&
     \Drupal::currentUser()->hasPermission('access toolbar')
   ) {
     // If core toolbar is enabled and user has access, do not show neo_toolbar.
     // This does not apply to user 1 who will always see neo_toolbar.
-    return FALSE;
+    $access = FALSE;
   }
-  // If masquerading, we assume toolbar access.
-  if (!$access && \Drupal::hasService('masquerade')) {
+  elseif (!$access && \Drupal::hasService('masquerade')) {
+    // If masquerading, we assume toolbar access.
     $masquerade = \Drupal::service('masquerade');
-    return $masquerade->isMasquerading();
+    $access = $masquerade->isMasquerading();
   }
-  $cache = $access;
+  $cache[$uid] = $access;
   return $access;
 }
 
 /**
  * Implements hook_block_access().
  */
-function neo_toolbar_block_access(BlockInterface $block, $operation, AccountInterface $account) {
+function neo_toolbar_block_access(BlockInterface $block, string $operation, AccountInterface $account): ?AccessResultInterface {
   if (!neo_toolbar_toolbar_view_access()) {
-    return;
+    return NULL;
   }
   switch ($block->getPluginId()) {
     case 'local_actions_block':
@@ -121,6 +140,7 @@ function neo_toolbar_block_access(BlockInterface $block, $operation, AccountInte
       }
       break;
   }
+  return NULL;
 }
 
 /**

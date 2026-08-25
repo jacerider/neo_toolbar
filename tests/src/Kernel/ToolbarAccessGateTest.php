@@ -23,30 +23,39 @@ use PHPUnit\Framework\Attributes\Group;
  * enabled and the account may use it, and treats an active masquerade as
  * access.
  *
- * Two behaviours are pinned as current rather than defended, so that the
- * candidate which fixes them lands as a visible diff:
+ * Two behaviours this class first pinned as defects are now fixed, and the
+ * assertions that pinned them have been inverted in place:
  *
- * 1. The static cache never caches. `drupal_static()` returns by reference and
- *    `$cache = drupal_static(__FUNCTION__)` drops the reference, so the write
- *    at the end lands on a local copy and the `isset()` guard at the top can
- *    never hit.
- * 2. Two of the three exits `return` before the cache write is reached, so
- *    even with the reference restored they would stay uncached.
+ * 1. The gate memo is a real reference — `$cache = &drupal_static(__FUNCTION__,
+ *    [])` — keyed by account id, so a second call for one account is answered
+ *    from it and a second *account* on the proxy gets its own answer.
+ * 2. All three exits fall through to one write-and-return, so the core toolbar
+ *    deferral and the masquerade branch are cached like the plain path. A test
+ *    that asks about one account twice with the condition underneath it changed
+ *    now needs `drupal_static_reset('neo_toolbar_toolbar_view_access')`, and
+ *    two of the tests below say so where they call it.
  *
- * A third was expected and is not there. The plan predicted that the user-1
- * exemption can never fire, on the grounds that `$account->id()` is an `int`
- * and the comparison is `!== '1'`. On this site it is not an `int`: the mysql
- * driver sets `\PDO::ATTR_STRINGIFY_FETCHES`, every fetched column arrives as
- * a string, and an account read back through storage — which is what both
- * `Cookie::getUserFromSession()` and `AccountProxy::getAccount()` do — answers
- * `id()` with the string `'1'`. The exemption therefore fires, and user 1 sees
- * the toolbar exactly as the comment above the branch claims. What the branch
- * really carries is a type dependency rather than a dead exemption, so
- * `testUserOneIsExemptOnlyWhileItsIdIsNotAnInteger()` pins both sides of it:
+ * A third defect was expected and is not there. The plan predicted that the
+ * user-1 exemption can never fire, on the grounds that `$account->id()` is an
+ * `int` and the comparison is `!== '1'`. On this site it is not an `int`: the
+ * mysql driver sets `\PDO::ATTR_STRINGIFY_FETCHES`, every fetched column
+ * arrives as a string, and an account read back through storage — which is
+ * what both `Cookie::getUserFromSession()` and `AccountProxy::getAccount()` do
+ * — answers `id()` with the string `'1'`. The exemption therefore fires, and
+ * user 1 sees the toolbar exactly as the comment above the branch claims. What
+ * the branch really carries is a type dependency rather than a dead exemption,
+ * so `testUserOneIsExemptOnlyWhileItsIdIsNotAnInteger()` pins both sides of it:
  * the string id this site's driver produces, and the integer id a driver
  * returning native types would produce. Changing `'1'` to `1` would not
  * repair a dead branch — it would take user 1's toolbar away on every mysql
  * site.
+ *
+ * That is also why the clause is still here after the ticket that restructured
+ * this gate. That ticket described it as dead and proposed deleting it as a
+ * provable no-op; on this site's storage it is live, so deleting it would have
+ * changed what user 1 is told — the one thing the same ticket says it must not
+ * do. `testTellsEveryAccountExactlyWhatItToldThemBefore()` is the assertion
+ * that holds the line.
  *
  * Core's `toolbar` is enabled here, which is one of the two tests the spec
  * names as deliberately going wider than the `system`/`user`/`neo_toolbar`
@@ -229,6 +238,12 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     // the integer a driver without `\PDO::ATTR_STRINGIFY_FETCHES` would, and
     // `!== '1'` is no longer equal: the guard opens, the deferral is taken and
     // user 1 loses its toolbar.
+    //
+    // The gate memo is keyed by account id and both halves of this comparison
+    // are account 1, so the memo would otherwise answer the second with the
+    // first's result. Clearing it is what makes this a question about the id's
+    // type rather than about the memo.
+    drupal_static_reset('neo_toolbar_toolbar_view_access');
     $this->signIn(new UserSession([
       'uid' => 1,
       'name' => 'user_one',
@@ -255,6 +270,10 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     $this->container->set('masquerade', new TestMasquerade(TRUE));
     $this->assertTrue(neo_toolbar_toolbar_view_access());
 
+    // The gate now memoises per account, so asking the same account again with
+    // the stand-in's answer changed reads the memo rather than the service.
+    // Clearing it is what keeps this an assertion about the service's answer.
+    drupal_static_reset('neo_toolbar_toolbar_view_access');
     $this->container->set('masquerade', new TestMasquerade(FALSE));
     $this->assertFalse(neo_toolbar_toolbar_view_access());
 
@@ -271,50 +290,274 @@ final class ToolbarAccessGateTest extends KernelTestBase {
   }
 
   /**
-   * The static cache never stores, so every call recomputes.
+   * The gate memo stores what the old static threw away.
    *
-   * Pinned as current behaviour, not defended. `drupal_static()` returns by
-   * reference; `$cache = drupal_static(__FUNCTION__)` takes a copy, so the
-   * write at the end of the function lands on a local variable and the guard
-   * at the top can never hit. Two of the three exits compound it by returning
-   * before the write is reached at all.
+   * Rewritten from `testRecomputesOnEveryCallBecauseTheCacheNeverStores()`,
+   * which pinned the defect as current behaviour: `$cache =
+   * drupal_static(__FUNCTION__)` dropped the reference, so
+   * `assertNull(drupal_static('neo_toolbar_toolbar_view_access'))` held after
+   * every call, and two of the three exits `return`ed before the write besides.
+   * The reference is restored, the memo is keyed by account id and all three
+   * exits fall through to one write, so the pinned assertion inverts: the
+   * static the function names now carries an answer per account, from each of
+   * the three exits in turn.
    *
-   * Covers: it recomputes on every call, because the static cache never stores
-   * a result.
+   * Covers: it leaves the module's existing tests green, with the pinned
+   * non-caching assertion rewritten.
    */
-  public function testRecomputesOnEveryCallBecauseTheCacheNeverStores(): void {
-    // The last exit is the only one that reaches `$cache = $access`, so an
-    // allowed account is the one input that could store anything.
-    $this->signIn($this->createAccount('first', ['access neo_toolbar']));
+  public function testTheGateMemoStoresWhatTheOldStaticThrewAway(): void {
+    // The plainly allowed exit, which was the only one that ever reached the
+    // write.
+    $first = $this->createAccount('stored_first', ['access neo_toolbar']);
+    $this->signIn($first);
     $this->assertTrue(neo_toolbar_toolbar_view_access());
+    $this->assertSame(
+      [(int) $first->id() => TRUE],
+      drupal_static('neo_toolbar_toolbar_view_access'),
+    );
 
-    // Nothing was stored: the static the function names is still unset, which
-    // is why the `isset()` guard at the top can never hit.
-    $this->assertNull(drupal_static('neo_toolbar_toolbar_view_access'));
-
-    // And so a different account is answered afresh rather than handed the
-    // first one's result, with no `drupal_static_reset()` in between.
-    $this->signIn($this->createAccount('second', []));
-    $this->assertFalse(neo_toolbar_toolbar_view_access());
-    $this->assertNull(drupal_static('neo_toolbar_toolbar_view_access'));
-
-    // The two early exits never reach the write in the first place. Core's
-    // toolbar exit, then the masquerade exit, then back to an allowed account:
-    // every answer is the current account's, never a previous one's.
-    $this->signIn($this->createAccount('deferred', [
+    // The core toolbar deferral, which used to `return FALSE` above it.
+    $deferred = $this->createAccount('stored_deferred', [
       'access neo_toolbar',
       'access toolbar',
-    ]));
+    ]);
+    $this->signIn($deferred);
     $this->assertFalse(neo_toolbar_toolbar_view_access());
 
+    // The masquerade exit, which used to `return` the service's answer.
     $this->container->set('masquerade', new TestMasquerade(TRUE));
-    $this->signIn($this->createAccount('third', []));
+    $masquerading = $this->createAccount('stored_masquerading', []);
+    $this->signIn($masquerading);
     $this->assertTrue(neo_toolbar_toolbar_view_access());
 
-    $this->container->set('masquerade', new TestMasquerade(FALSE));
-    $this->signIn($this->createAccount('fourth', ['access neo_toolbar']));
+    $this->assertSame([
+      (int) $first->id() => TRUE,
+      (int) $deferred->id() => FALSE,
+      (int) $masquerading->id() => TRUE,
+    ], drupal_static('neo_toolbar_toolbar_view_access'));
+  }
+
+  /**
+   * A second call for one account is answered by the memo, not by the gate.
+   *
+   * The gate memo is `drupal_static(__FUNCTION__)` taken by reference and
+   * keyed by account id. Proving it stores means changing something the gate
+   * would otherwise notice and finding that it does not: the same account id
+   * is put back on the proxy carrying no permissions at all, and the answer
+   * does not move.
+   *
+   * Covers: it answers from the gate memo on a second call for the same
+   * account.
+   */
+  public function testAnswersFromTheGateMemoOnTheSecondCallForOneAccount(): void {
+    $account = $this->createAccount('memoised', ['access neo_toolbar']);
+    $this->signIn($account);
     $this->assertTrue(neo_toolbar_toolbar_view_access());
-    $this->assertNull(drupal_static('neo_toolbar_toolbar_view_access'));
+
+    // The same account id, delivered as a session that holds nothing. A gate
+    // that recomputed would answer FALSE here; a gate that remembers answers
+    // for the account it already answered about.
+    $this->signIn(new UserSession([
+      'uid' => (int) $account->id(),
+      'name' => 'memoised',
+      'roles' => ['authenticated'],
+    ]));
+    $this->assertFalse(\Drupal::currentUser()->hasPermission('access neo_toolbar'));
+
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+  }
+
+  /**
+   * The core toolbar deferral writes its answer down like every other exit.
+   *
+   * This exit `return`ed before the cache write, so restoring the reference
+   * alone would have left the branch that does the most work uncached. It is
+   * driven, then the condition underneath it is removed, and the memo's answer
+   * is expected to win.
+   *
+   * Covers: it answers the core toolbar deferral from the memo, which returned
+   * before the cache write before.
+   */
+  public function testAnswersTheCoreToolbarDeferralFromTheMemo(): void {
+    $account = $this->createAccount('deferred_once', [
+      'access neo_toolbar',
+      'access toolbar',
+    ]);
+    $this->signIn($account);
+    $this->assertFalse(neo_toolbar_toolbar_view_access());
+
+    // The same account id, now holding only the module's own permission, which
+    // is the plainly allowed path. A gate that recomputed would answer TRUE.
+    Role::create([
+      'id' => 'deferred_once_neo_only',
+      'label' => 'deferred_once_neo_only',
+      'permissions' => ['access neo_toolbar'],
+    ])->save();
+    $this->signIn(new UserSession([
+      'uid' => (int) $account->id(),
+      'name' => 'deferred_once',
+      'roles' => ['authenticated', 'deferred_once_neo_only'],
+    ]));
+    $this->assertTrue(\Drupal::currentUser()->hasPermission('access neo_toolbar'));
+    $this->assertFalse(\Drupal::currentUser()->hasPermission('access toolbar'));
+
+    $this->assertFalse(neo_toolbar_toolbar_view_access());
+  }
+
+  /**
+   * The masquerade branch writes its answer down like every other exit.
+   *
+   * The gate's only non-deterministic exit, and the second of the two that
+   * `return`ed before the cache write. The stand-in is asked once, then told
+   * to stop masquerading; the memo is expected to keep the answer it gave.
+   *
+   * Covers: it answers the masquerade branch from the memo, which returned
+   * before the cache write before.
+   */
+  public function testAnswersTheMasqueradeBranchFromTheMemo(): void {
+    $this->signIn($this->createAccount('memo_masquerading', []));
+    $this->assertFalse(\Drupal::currentUser()->hasPermission('access neo_toolbar'));
+
+    $this->container->set('masquerade', new TestMasquerade(TRUE));
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+
+    // The stand-in stops masquerading. A gate that recomputed would ask it
+    // again and answer FALSE; a gate that remembers does not ask at all.
+    $this->container->set('masquerade', new TestMasquerade(FALSE));
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+  }
+
+  /**
+   * The memo is resettable, which is the reason it stayed a `drupal_static()`.
+   *
+   * A plain function `static` could not be cleared from outside; a long-running
+   * drush or queue process that switches accounts, and this test, both need
+   * that. Reset restores the memo to the empty array it was registered with.
+   *
+   * Covers: it recomputes after the static is reset under the gate's own
+   * function name.
+   */
+  public function testRecomputesAfterTheStaticIsResetUnderItsOwnFunctionName(): void {
+    $this->signIn($this->createAccount('resettable', []));
+
+    $this->container->set('masquerade', new TestMasquerade(TRUE));
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+
+    // Still remembered, so the recomputation below is the reset's doing and
+    // nothing else's.
+    $this->container->set('masquerade', new TestMasquerade(FALSE));
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+
+    drupal_static_reset('neo_toolbar_toolbar_view_access');
+    $this->assertSame([], drupal_static('neo_toolbar_toolbar_view_access'));
+
+    $this->assertFalse(neo_toolbar_toolbar_view_access());
+  }
+
+  /**
+   * Two accounts in one request get two answers, not one answer twice.
+   *
+   * The gate reads `\Drupal::currentUser()`, a proxy whose account can be
+   * replaced within a single PHP process — cron, a queue worker, a test. A memo
+   * keyed on nothing would hand the first account's answer to the second, which
+   * on a question shaped "may this person see the admin toolbar" is the trap
+   * worth keying against.
+   *
+   * Covers: it answers separately for a second account put on the current-user
+   * proxy in the same request.
+   */
+  public function testAnswersSeparatelyForTheSecondAccountOnTheProxy(): void {
+    $first = $this->createAccount('proxy_first', ['access neo_toolbar']);
+    $second = $this->createAccount('proxy_second', []);
+
+    $this->signIn($first);
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+
+    $this->signIn($second);
+    $this->assertFalse(neo_toolbar_toolbar_view_access());
+
+    // And the first account is still answered as itself rather than as the
+    // account that was asked about most recently.
+    $this->signIn($first);
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+
+    // Both answers are held side by side, under their own account ids.
+    $this->assertSame([
+      (int) $first->id() => TRUE,
+      (int) $second->id() => FALSE,
+    ], drupal_static('neo_toolbar_toolbar_view_access'));
+  }
+
+  /**
+   * Every permutation answers after this ticket what it answered before it.
+   *
+   * The whole ticket is a restructure: the reference restored, a key added, and
+   * two `return`s turned into assignments falling through to one exit. Nothing
+   * about *which* answer a branch produces moves, only how many times it is
+   * computed and whether it is remembered — so every permutation the class
+   * already pins is walked again here in one request, and the memo is asserted
+   * as the record of what each account was told.
+   *
+   * User 1 is in that table on purpose. The ticket describes the
+   * `\Drupal::currentUser()->id() !== '1'` clause as dead and proposes deleting
+   * it as a no-op; on this site it is not dead — see
+   * `testUserOneIsExemptOnlyWhileItsIdIsNotAnInteger()` — and deleting it would
+   * take user 1's toolbar away, which is the one thing this ticket says it must
+   * not do. The clause therefore stays, and this is the assertion that says so.
+   *
+   * Covers: it tells every account exactly what it told them before, user 1
+   * included.
+   */
+  public function testTellsEveryAccountExactlyWhatItToldThemBefore(): void {
+    $expected = [];
+
+    // The module's own permission and nothing else: allowed.
+    $allowed = $this->createAccount('every_allowed', ['access neo_toolbar']);
+    $this->signIn($allowed);
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+    $expected[(int) $allowed->id()] = TRUE;
+
+    // Neither permission, and no masquerade service in the container at all:
+    // denied.
+    $nobody = $this->createAccount('every_nobody', []);
+    $this->signIn($nobody);
+    $this->assertFalse(\Drupal::hasService('masquerade'));
+    $this->assertFalse(neo_toolbar_toolbar_view_access());
+    $expected[(int) $nobody->id()] = FALSE;
+
+    // Both permissions, so core's toolbar takes it: denied.
+    $both = $this->createAccount('every_both', [
+      'access neo_toolbar',
+      'access toolbar',
+    ]);
+    $this->signIn($both);
+    $this->assertFalse(neo_toolbar_toolbar_view_access());
+    $expected[(int) $both->id()] = FALSE;
+
+    // No permission, masquerading: allowed.
+    $this->container->set('masquerade', new TestMasquerade(TRUE));
+    $masquerading = $this->createAccount('every_masquerading', []);
+    $this->signIn($masquerading);
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+    $expected[(int) $masquerading->id()] = TRUE;
+
+    // No permission, not masquerading: denied.
+    $this->container->set('masquerade', new TestMasquerade(FALSE));
+    $idle = $this->createAccount('every_idle', []);
+    $this->signIn($idle);
+    $this->assertFalse(neo_toolbar_toolbar_view_access());
+    $expected[(int) $idle->id()] = FALSE;
+
+    // User 1, read back through storage exactly as production hands it to the
+    // proxy: allowed, because the deferral exempts it while its id is the
+    // string this site's driver returns.
+    $userOne = User::load(1);
+    $this->signIn($userOne);
+    $this->assertSame('1', \Drupal::currentUser()->id());
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+    $expected[1] = TRUE;
+
+    $this->assertSame($expected, drupal_static('neo_toolbar_toolbar_view_access'));
   }
 
   /**
