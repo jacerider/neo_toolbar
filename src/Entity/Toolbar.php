@@ -84,25 +84,29 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
   protected $isEditMode = FALSE;
 
   /**
-   * The toolbar items.
+   * The memoised toolbar items, or NULL until the pipeline has been run.
    *
-   * @var \Drupal\neo_toolbar\ToolbarItemInterface[]
+   * Nullable because "not computed yet" is a state this property is guarded on,
+   * and a declared type that ruled it out made that guard a condition phpstan
+   * reports as one that cannot hold.
+   *
+   * @var \Drupal\neo_toolbar\ToolbarItemInterface[]|null
    */
-  protected $items;
+  protected ?array $items = NULL;
 
   /**
-   * The cacheable metadata for the items.
+   * The cacheable metadata for the memoised items.
    *
-   * @var \Drupal\Core\Cache\CacheableMetadata
+   * @var \Drupal\Core\Cache\CacheableMetadata|null
    */
-  protected $itemsCacheableMetadata;
+  protected ?CacheableMetadata $itemsCacheableMetadata = NULL;
 
   /**
-   * The plugin collection that holds the regions.
+   * The plugin collection that holds the regions, or NULL until first asked.
    *
-   * @var \Drupal\Core\Plugin\DefaultLazyPluginCollection
+   * @var \Drupal\Core\Plugin\DefaultLazyPluginCollection|null
    */
-  protected $regionCollection;
+  protected ?DefaultLazyPluginCollection $regionCollection = NULL;
 
   /**
    * {@inheritdoc}
@@ -121,117 +125,25 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * The pipeline this used to run lives on the toolbar repository now. What is
+   * left is what this method's interface has always advertised: hold the memo,
+   * delegate once, filter to a region, and merge the cacheability the pass
+   * collected into whatever the caller passed in.
    */
   public function getItems($regionId = NULL, ?CacheableMetadata $cacheableMetadata = NULL): array {
-    if (!isset($this->items)) {
+    if ($this->items === NULL) {
       $this->itemsCacheableMetadata = new CacheableMetadata();
-      $items = [];
-      $ids = $this->entityTypeManager()->getStorage('neo_toolbar_item')->getQuery()
-        ->accessCheck(TRUE)
-        ->condition('toolbar', $this->id)
-        ->condition('status', TRUE)
-        ->sort('weight')
-        ->execute();
-      if ($ids) {
-        /** @var \Drupal\neo_toolbar\ToolbarItemInterface[] $items */
-        $items = $this->entityTypeManager()->getStorage('neo_toolbar_item')->loadMultiple($ids);
-
-        if (!$this->isEditMode()) {
-          // Temporarily group items by region to check sibling access. This
-          // grouping has all items prior to access checks.
-          $allItemsByRegion = [];
-          foreach ($items as $key => $item) {
-            $allItemsByRegion[$item->getRegionId()][$key] = $item;
-          }
-
-          // Check access for each item.
-          $items = array_filter($items, function ($item) {
-            $access = $item->access('view', NULL, TRUE);
-            $this->itemsCacheableMetadata->addCacheableDependency($item);
-            $this->itemsCacheableMetadata->addCacheableDependency($access);
-            return $access->isAllowed();
-          });
-
-          // Temporarily group items by region to check sibling access.
-          $itemsByRegion = [];
-          foreach ($items as $key => $item) {
-            $itemsByRegion[$item->getRegionId()][$key] = $item;
-          }
-
-          // Check to see if we have empty regions after access checks.
-          foreach ($allItemsByRegion as $rid => $regionItems) {
-            if (!isset($itemsByRegion[$rid])) {
-              // We have an empty region which may be toggled by an item.
-              $regionItemId = str_replace('item:', '', $rid);
-              if (isset($items[$regionItemId])) {
-                // If we do have a triggering item, we need to remove it from
-                // the items list as well as the items by region list.
-                unset($itemsByRegion[$items[$regionItemId]->getRegionId()][$regionItemId]);
-                unset($items[$regionItemId]);
-              }
-            }
-          }
-
-          // Check sibling access for each item in a region.
-          foreach ($itemsByRegion as $rid => $regionItems) {
-            $removeRegionItems = array_filter($regionItems, function ($item, $key) use ($regionItems) {
-              $keys = array_keys($regionItems);
-              $found_index = array_search($key, $keys);
-              if ($found_index !== FALSE) {
-                $previous = $found_index > 0 ? $keys[$found_index - 1] : NULL;
-                $next = $found_index < count($keys) - 1 ? $keys[$found_index + 1] : NULL;
-                $siblingAccess = $item->accessBySiblings($regionItems[$previous] ?? NULL, $regionItems[$next] ?? NULL);
-                if ($siblingAccess->isForbidden()) {
-                  return TRUE;
-                }
-              }
-              return FALSE;
-            }, ARRAY_FILTER_USE_BOTH);
-            $items = array_diff_key($items, $removeRegionItems);
-          }
-
-          // Handle region items that may need to be restored based on their
-          // children state.
-          foreach ($itemsByRegion as $rid => $regionItems) {
-            // Check if this is a dynamically generated region created by an
-            // item. If region is in this list it has items.
-            if (strpos($rid, 'item:region') === 0) {
-              // Extract the ID of the item that created this region.
-              $triggeringItemId = substr($rid, 5);
-
-              // Check if the triggering item exists in any region.
-              $triggeringItemExists = FALSE;
-              foreach ($itemsByRegion as $rid => $i) {
-                if (isset($items[$triggeringItemId])) {
-                  $triggeringItemExists = TRUE;
-                  break;
-                }
-              }
-
-              // If the triggering item doesn't exist in any active region but
-              // its region has items, we need to restore the triggering item.
-              if (!$triggeringItemExists) {
-                foreach ($allItemsByRegion as $rid => $originalItems) {
-                  if (isset($originalItems[$triggeringItemId])) {
-                    $items[$triggeringItemId] = $originalItems[$triggeringItemId];
-                    break;
-                  }
-                }
-              }
-            }
-          }
-
-        }
-      }
-
-      $this->items = $items;
+      /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
+      $repository = \Drupal::service('neo_toolbar.repository');
+      $this->items = $repository->getToolbarItems($this, $this->itemsCacheableMetadata);
     }
 
     $items = $this->items;
     if ($regionId) {
       $items = array_filter($items, fn($item) => $item->getRegionId() === $regionId);
     }
-    if ($cacheableMetadata) {
+    if ($cacheableMetadata && $this->itemsCacheableMetadata) {
       $cacheableMetadata->addCacheableDependency($this->itemsCacheableMetadata);
     }
     return $items;
@@ -273,7 +185,7 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
    * {@inheritdoc}
    */
   public function getRegionCollection() {
-    if (!$this->regionCollection) {
+    if ($this->regionCollection === NULL) {
       /** @var \Drupal\neo_toolbar\ToolbarRegionPluginManager $regionManager */
       $regionManager = \Drupal::service('plugin.manager.neo_toolbar_region');
       $configurations = [];
