@@ -9,9 +9,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -48,33 +46,12 @@ final class ToolbarItemListBuilder extends ConfigEntityListBuilder implements Fo
   protected $toolbar;
 
   /**
-   * Constructs a new BlockListBuilder object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type definition.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
-   *   The entity storage class.
-   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
-   *   The form builder.
-   */
-  public function __construct(
-    EntityTypeInterface $entity_type,
-    EntityStorageInterface $storage,
-    FormBuilderInterface $form_builder,
-  ) {
-    parent::__construct($entity_type, $storage);
-    $this->formBuilder = $form_builder;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('form_builder')
-    );
+    $instance = parent::createInstance($container, $entity_type);
+    $instance->formBuilder = $container->get('form_builder');
+    return $instance;
   }
 
   /**
@@ -181,7 +158,7 @@ final class ToolbarItemListBuilder extends ConfigEntityListBuilder implements Fo
   /**
    * Build the "regions" portion of the form.
    *
-   * @param Drupal\neo_toolbar\ToolbarRegionPluginInterface $region
+   * @param \Drupal\neo_toolbar\ToolbarRegionPluginInterface $region
    *   The region.
    * @param array $items
    *   An array of region items.
@@ -311,7 +288,7 @@ final class ToolbarItemListBuilder extends ConfigEntityListBuilder implements Fo
       $entity->set('region', $entity_values['region']);
       $entity->save();
     }
-    $this->messenger()->addMessage(t('The item settings have been updated.'));
+    $this->messenger()->addMessage($this->t('The item settings have been updated.'));
   }
 
   /**
