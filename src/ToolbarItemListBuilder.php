@@ -6,6 +6,7 @@ namespace Drupal\neo_toolbar;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -337,8 +338,8 @@ final class ToolbarItemListBuilder extends ConfigEntityListBuilder implements Fo
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOperations(EntityInterface $entity) {
-    $operations = parent::getDefaultOperations($entity);
+  public function getDefaultOperations(EntityInterface $entity, ?CacheableMetadata $cacheability = NULL) {
+    $operations = parent::getDefaultOperations($entity, $cacheability);
     if (!empty($operations['edit'])) {
       $operations['edit']['attributes'] = [
         'class' => ['use-ajax'],
