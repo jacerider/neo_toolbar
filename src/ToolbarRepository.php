@@ -74,11 +74,14 @@ final class ToolbarRepository {
    * This is the module's densest piece of logic and it used to live inside
    * `Toolbar::getItems()`, which is a config entity — the one class in Drupal
    * that should hold as little of this as possible. It loads the toolbar's
-   * enabled items in weight order, filters them by view access while
-   * accumulating cacheability, collapses a derived region whose items have all
-   * gone (taking the item that opens it with it), drops items their immediate
-   * siblings forbid, and restores a triggering item whose derived region still
-   * has children.
+   * enabled items in weight order and then runs the four pipeline rules below
+   * in the one order that is correct: view access, region collapse, sibling
+   * access, triggering-item restore.
+   *
+   * This is the composition callers want. The rules are public so that each is
+   * answerable on a handful of items with no toolbar behind them — see
+   * `docs/adr/0005` — but they are four answers to four questions, not a kit:
+   * run in another order they give an answer no toolbar would.
    *
    * It is stateless: it takes a toolbar, runs the pass, fills the cacheable
    * metadata the caller handed it, and remembers nothing. The memo stays on the
@@ -108,93 +111,178 @@ final class ToolbarRepository {
       $items = $this->entityTypeManager->getStorage('neo_toolbar_item')->loadMultiple($ids);
 
       if (!$toolbar->isEditMode()) {
-        // Temporarily group items by region to check sibling access. This
-        // grouping has all items prior to access checks.
-        $allItemsByRegion = [];
-        foreach ($items as $key => $item) {
-          $allItemsByRegion[$item->getRegionId()][$key] = $item;
-        }
+        // What the toolbar held before any rule ran. Two of the rules need it:
+        // "this region emptied out" and "this dropdown still has children" are
+        // both statements about the difference the access filter made.
+        $allItems = $items;
 
-        // Check access for each item.
-        $items = array_filter($items, function ($item) use ($cacheableMetadata) {
-          $access = $item->access('view', NULL, TRUE);
-          $cacheableMetadata->addCacheableDependency($item);
-          $cacheableMetadata->addCacheableDependency($access);
-          return $access->isAllowed();
-        });
-
-        // Temporarily group items by region to check sibling access.
-        $itemsByRegion = [];
-        foreach ($items as $key => $item) {
-          $itemsByRegion[$item->getRegionId()][$key] = $item;
-        }
-
-        // Check to see if we have empty regions after access checks.
-        foreach ($allItemsByRegion as $rid => $regionItems) {
-          if (!isset($itemsByRegion[$rid])) {
-            // We have an empty region which may be toggled by an item.
-            $regionItemId = str_replace('item:', '', $rid);
-            if (isset($items[$regionItemId])) {
-              // If we do have a triggering item, we need to remove it from
-              // the items list as well as the items by region list.
-              unset($itemsByRegion[$items[$regionItemId]->getRegionId()][$regionItemId]);
-              unset($items[$regionItemId]);
-            }
-          }
-        }
-
-        // Check sibling access for each item in a region.
-        foreach ($itemsByRegion as $rid => $regionItems) {
-          $removeRegionItems = array_filter($regionItems, function ($item, $key) use ($regionItems) {
-            $keys = array_keys($regionItems);
-            $found_index = array_search($key, $keys);
-            if ($found_index !== FALSE) {
-              $previous = $found_index > 0 ? $keys[$found_index - 1] : NULL;
-              $next = $found_index < count($keys) - 1 ? $keys[$found_index + 1] : NULL;
-              $siblingAccess = $item->accessBySiblings($regionItems[$previous] ?? NULL, $regionItems[$next] ?? NULL);
-              if ($siblingAccess->isForbidden()) {
-                return TRUE;
-              }
-            }
-            return FALSE;
-          }, ARRAY_FILTER_USE_BOTH);
-          $items = array_diff_key($items, $removeRegionItems);
-        }
-
-        // Handle region items that may need to be restored based on their
-        // children state.
-        foreach ($itemsByRegion as $rid => $regionItems) {
-          // Check if this is a dynamically generated region created by an
-          // item. If region is in this list it has items.
-          if (strpos($rid, 'item:region') === 0) {
-            // Extract the ID of the item that created this region.
-            $triggeringItemId = substr($rid, 5);
-
-            // Check if the triggering item exists in any region.
-            $triggeringItemExists = FALSE;
-            foreach ($itemsByRegion as $rid => $i) {
-              if (isset($items[$triggeringItemId])) {
-                $triggeringItemExists = TRUE;
-                break;
-              }
-            }
-
-            // If the triggering item doesn't exist in any active region but
-            // its region has items, we need to restore the triggering item.
-            if (!$triggeringItemExists) {
-              foreach ($allItemsByRegion as $rid => $originalItems) {
-                if (isset($originalItems[$triggeringItemId])) {
-                  $items[$triggeringItemId] = $originalItems[$triggeringItemId];
-                  break;
-                }
-              }
-            }
-          }
-        }
-
+        $items = $this->filterItemsByViewAccess($items, $cacheableMetadata);
+        $items = $this->collapseEmptyRegions($items, $allItems);
+        $items = $this->filterItemsBySiblingAccess($items);
+        $items = $this->restoreTriggeringItems($items, $allItems);
       }
     }
     return $items;
+  }
+
+  /**
+   * Drops the items view access forbids, recording every one it examined.
+   *
+   * The first pipeline rule. Cacheability is the half a caller cannot recover
+   * from the answer: a dropped item is not in the array it gets back, so only
+   * the metadata can say the answer depends on that item and on the access
+   * result that dropped it.
+   *
+   * @param \Drupal\neo_toolbar\ToolbarItemInterface[] $items
+   *   The items to filter, keyed by item id.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheableMetadata
+   *   Cacheable metadata to fill with every item examined and every access
+   *   result consulted, dropped items included.
+   *
+   * @return \Drupal\neo_toolbar\ToolbarItemInterface[]
+   *   The items view access allows, in the order they were given.
+   */
+  public function filterItemsByViewAccess(array $items, ?CacheableMetadata $cacheableMetadata = NULL): array {
+    $cacheableMetadata = $cacheableMetadata ?? new CacheableMetadata();
+    return array_filter($items, function (ToolbarItemInterface $item) use ($cacheableMetadata) {
+      $access = $item->access('view', NULL, TRUE);
+      $cacheableMetadata->addCacheableDependency($item);
+      $cacheableMetadata->addCacheableDependency($access);
+      return $access->isAllowed();
+    });
+  }
+
+  /**
+   * Drops the triggering item of a derived region that has emptied out.
+   *
+   * The second pipeline rule. A derived region is opened by an item of its
+   * own, and an opener that opens onto nothing is worse than no opener at all,
+   * so when every item a region held has gone the item that opens it goes too.
+   *
+   * "Has gone" is only meaningful against what the toolbar held before, which
+   * is why the pre-access set is a parameter rather than something this reads
+   * off object state: passing it is what lets the rule be called without a
+   * toolbar having emptied anything.
+   *
+   * @param \Drupal\neo_toolbar\ToolbarItemInterface[] $items
+   *   The items that survived the access filter, keyed by item id.
+   * @param \Drupal\neo_toolbar\ToolbarItemInterface[] $allItems
+   *   The items the toolbar held before the access filter ran, keyed by id.
+   *
+   * @return \Drupal\neo_toolbar\ToolbarItemInterface[]
+   *   The items, less the openers of every region that emptied out.
+   */
+  public function collapseEmptyRegions(array $items, array $allItems): array {
+    $itemsByRegion = $this->groupItemsByRegion($items);
+    foreach (array_keys($this->groupItemsByRegion($allItems)) as $rid) {
+      if (!isset($itemsByRegion[$rid])) {
+        // An empty region, which may be one an item toggles.
+        $regionItemId = str_replace('item:', '', $rid);
+        if (isset($items[$regionItemId])) {
+          unset($items[$regionItemId]);
+        }
+      }
+    }
+    return $items;
+  }
+
+  /**
+   * Drops the items their immediate neighbours forbid.
+   *
+   * The third pipeline rule. Every item is asked about the item before it and
+   * the item after it within its own region; `Divider` is the only plugin that
+   * answers anything but "allowed", and it forbids itself at either end of a
+   * region and beside another divider.
+   *
+   * The neighbours are read from the region as it was handed in, so two
+   * adjacent items that forbid each other both go — neither is spared by the
+   * other's departure.
+   *
+   * @param \Drupal\neo_toolbar\ToolbarItemInterface[] $items
+   *   The items to filter, keyed by item id.
+   *
+   * @return \Drupal\neo_toolbar\ToolbarItemInterface[]
+   *   The items their siblings allow, in the order they were given.
+   */
+  public function filterItemsBySiblingAccess(array $items): array {
+    foreach ($this->groupItemsByRegion($items) as $regionItems) {
+      $keys = array_keys($regionItems);
+      $forbidden = array_filter($regionItems, function (ToolbarItemInterface $item, string|int $key) use ($regionItems, $keys) {
+        $index = array_search($key, $keys);
+        if ($index === FALSE) {
+          return FALSE;
+        }
+        $previous = $index > 0 ? $keys[$index - 1] : NULL;
+        $next = $index < count($keys) - 1 ? $keys[$index + 1] : NULL;
+        $siblingAccess = $item->accessBySiblings($regionItems[$previous] ?? NULL, $regionItems[$next] ?? NULL);
+        return $siblingAccess->isForbidden();
+      }, ARRAY_FILTER_USE_BOTH);
+      $items = array_diff_key($items, $forbidden);
+    }
+    return $items;
+  }
+
+  /**
+   * Brings back the opener of a derived region that still has children.
+   *
+   * The fourth pipeline rule, and the mirror of the second: where the collapse
+   * drops an opener whose region emptied, this restores one whose region did
+   * not. A child of a derived region has no other way in, so an opener that
+   * lost its own access is appended rather than leave the children stranded.
+   *
+   * It fires only for a region id beginning `item:region`, which means only
+   * for an opener whose own machine name begins with `region` — current
+   * behaviour, pinned by the characterisation suite and widened by ticket 04
+   * of this plan, not by this one.
+   *
+   * "Still has children" is read from the items handed in, so a region whose
+   * last child the sibling rule dropped has no children here. Inside the
+   * composition that is the rule running after
+   * \Drupal\neo_toolbar\ToolbarRepository::filterItemsBySiblingAccess(), which
+   * is the order it has always run in.
+   *
+   * @param \Drupal\neo_toolbar\ToolbarItemInterface[] $items
+   *   The items that survived the rules before this one, keyed by item id.
+   * @param \Drupal\neo_toolbar\ToolbarItemInterface[] $allItems
+   *   The items the toolbar held before the access filter ran, keyed by id.
+   *
+   * @return \Drupal\neo_toolbar\ToolbarItemInterface[]
+   *   The items, plus every opener whose derived region still has children.
+   */
+  public function restoreTriggeringItems(array $items, array $allItems): array {
+    foreach (array_keys($this->groupItemsByRegion($items)) as $rid) {
+      // A region in this list has items. If an item derived it, that item is
+      // the one thing standing between those items and nobody reaching them.
+      if (strpos($rid, 'item:region') === 0) {
+        $triggeringItemId = substr($rid, 5);
+        if (!isset($items[$triggeringItemId]) && isset($allItems[$triggeringItemId])) {
+          $items[$triggeringItemId] = $allItems[$triggeringItemId];
+        }
+      }
+    }
+    return $items;
+  }
+
+  /**
+   * Groups items by the region they sit in.
+   *
+   * The one thing the four rules share, and the only part of the pipeline that
+   * is not answerable on its own: it is a shape, not a question, so it stays
+   * private where `docs/adr/0005` put it.
+   *
+   * @param \Drupal\neo_toolbar\ToolbarItemInterface[] $items
+   *   The items to group, keyed by item id.
+   *
+   * @return array<string, \Drupal\neo_toolbar\ToolbarItemInterface[]>
+   *   The items keyed by region id and then by item id, regions in the order
+   *   their first item appeared.
+   */
+  private function groupItemsByRegion(array $items): array {
+    $itemsByRegion = [];
+    foreach ($items as $key => $item) {
+      $itemsByRegion[$item->getRegionId()][$key] = $item;
+    }
+    return $itemsByRegion;
   }
 
   /**
