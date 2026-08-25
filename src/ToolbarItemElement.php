@@ -121,43 +121,20 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   protected $tooltipStatus = TRUE;
 
   /**
-   * The toolbar item element attributes.
+   * The element's attribute bags, keyed by the ElementAttributeBag value.
    *
-   * Storage for one of the five attribute bags. NULL until first use — see
-   * ::attributeBag(), which is the only member of this class that names any of
-   * the five directly.
+   * The storage for every attribute bag the element carries, and the only
+   * declaration of it. A key is present once its bag has been asked for; an
+   * element that was never written to holds none. ::attributeBag() is the sole
+   * reader and writer of this array — nothing else in the class, the
+   * constructor and the render array included, knows a bag is stored here at
+   * all, which is what makes a sixth bag one ElementAttributeBag case and three
+   * forwarders rather than a property, a constructor line and a render-array
+   * line as well.
    *
-   * @var \Drupal\Core\Template\Attribute|null
+   * @var array<string, \Drupal\Core\Template\Attribute>
    */
-  protected $attributes;
-
-  /**
-   * The toolbar item element title attributes.
-   *
-   * @var \Drupal\Core\Template\Attribute|null
-   */
-  protected $titleAttributes;
-
-  /**
-   * The toolbar item element icon attributes.
-   *
-   * @var \Drupal\Core\Template\Attribute|null
-   */
-  protected $iconAttributes;
-
-  /**
-   * The toolbar item element image attributes.
-   *
-   * @var \Drupal\Core\Template\Attribute|null
-   */
-  protected $imageAttributes;
-
-  /**
-   * The toolbar item element badge attributes.
-   *
-   * @var \Drupal\Core\Template\Attribute|null
-   */
-  protected $badgeAttributes;
+  protected array $attributeBags = [];
 
   /**
    * The toolbar item element attached.
@@ -526,10 +503,12 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   /**
    * Get one of the element's five attribute bags, creating it on first use.
    *
-   * The one route to a bag. All fifteen public writers below reach their bag
-   * through here, as does ::toRenderable(), so the five properties are named
-   * in this one method body and a sixth bag costs one ElementAttributeBag case
-   * and three forwarders rather than six edits in three places.
+   * The one route to a bag, and the only method in the class that knows where
+   * a bag is stored. All fifteen public writers below reach their bag through
+   * here, as does ::toRenderable(), so a sixth bag costs one
+   * ElementAttributeBag case and three forwarders rather than six edits in
+   * three places — in the storage as well as in the writers, because the bags
+   * are one array keyed by the case's value rather than a property apiece.
    *
    * Two behaviours here are load-bearing.
    *
@@ -540,8 +519,9 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * reaches a template if a copy is handed out.
    *
    * It creates a bag on first use rather than in the constructor, which is
-   * what lets an element be built without five Attribute objects and keeps
-   * where a bag is stored a detail of this method.
+   * what lets an element be built without five Attribute objects. A bag is
+   * created once and memoised, so the object handed to the render array is the
+   * object every later call answers.
    *
    * Protected, deliberately: all five bags are already reachable from a
    * fixture-free unit test through the fifteen methods that have always been
@@ -555,13 +535,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    *   The element's own attribute object for that bag.
    */
   protected function attributeBag(ElementAttributeBag $bag): Attribute {
-    return match ($bag) {
-      ElementAttributeBag::Element => $this->attributes ??= new Attribute(),
-      ElementAttributeBag::Title => $this->titleAttributes ??= new Attribute(),
-      ElementAttributeBag::Icon => $this->iconAttributes ??= new Attribute(),
-      ElementAttributeBag::Image => $this->imageAttributes ??= new Attribute(),
-      ElementAttributeBag::Badge => $this->badgeAttributes ??= new Attribute(),
-    };
+    return $this->attributeBags[$bag->value] ??= new Attribute();
   }
 
   /**
