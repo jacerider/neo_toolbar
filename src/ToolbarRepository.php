@@ -164,6 +164,12 @@ final class ToolbarRepository {
    * off object state: passing it is what lets the rule be called without a
    * toolbar having emptied anything.
    *
+   * Only a derived region has an opener, which is why every region id is put
+   * to \Drupal\neo_toolbar\ToolbarRepository::triggeringItemId() rather than
+   * having its prefix stripped unconditionally. A real region that emptied
+   * says nothing whatever about a toolbar item that happens to share its
+   * machine name.
+   *
    * @param \Drupal\neo_toolbar\ToolbarItemInterface[] $items
    *   The items that survived the access filter, keyed by item id.
    * @param \Drupal\neo_toolbar\ToolbarItemInterface[] $allItems
@@ -177,9 +183,9 @@ final class ToolbarRepository {
     foreach (array_keys($this->groupItemsByRegion($allItems)) as $rid) {
       if (!isset($itemsByRegion[$rid])) {
         // An empty region, which may be one an item toggles.
-        $regionItemId = str_replace('item:', '', $rid);
-        if (isset($items[$regionItemId])) {
-          unset($items[$regionItemId]);
+        $triggeringItemId = $this->triggeringItemId($rid);
+        if ($triggeringItemId !== NULL && isset($items[$triggeringItemId])) {
+          unset($items[$triggeringItemId]);
         }
       }
     }
@@ -230,10 +236,14 @@ final class ToolbarRepository {
    * not. A child of a derived region has no other way in, so an opener that
    * lost its own access is appended rather than leave the children stranded.
    *
-   * It fires only for a region id beginning `item:region`, which means only
-   * for an opener whose own machine name begins with `region` — current
-   * behaviour, pinned by the characterisation suite and widened by ticket 04
-   * of this plan, not by this one.
+   * It fires for every derived region, which is every region id carrying the
+   * `item:` prefix. It used to test `item:region` — five characters longer —
+   * and so fired only when the opener's own machine name began with `region`:
+   * true of items built on the `region` plugin, false of items built on
+   * `user`, and those two are the only plugins in the module that create
+   * regions. A user dropdown's links were never protected by this rule on any
+   * site until ticket 04 of this plan made both rules read the prefix the same
+   * way.
    *
    * "Still has children" is read from the items handed in, so a region whose
    * last child the sibling rule dropped has no children here. Inside the
@@ -253,14 +263,44 @@ final class ToolbarRepository {
     foreach (array_keys($this->groupItemsByRegion($items)) as $rid) {
       // A region in this list has items. If an item derived it, that item is
       // the one thing standing between those items and nobody reaching them.
-      if (strpos($rid, 'item:region') === 0) {
-        $triggeringItemId = substr($rid, 5);
-        if (!isset($items[$triggeringItemId]) && isset($allItems[$triggeringItemId])) {
-          $items[$triggeringItemId] = $allItems[$triggeringItemId];
-        }
+      $triggeringItemId = $this->triggeringItemId($rid);
+      if ($triggeringItemId !== NULL && !isset($items[$triggeringItemId]) && isset($allItems[$triggeringItemId])) {
+        $items[$triggeringItemId] = $allItems[$triggeringItemId];
       }
     }
     return $items;
+  }
+
+  /**
+   * Names the item that opens a region, if any item does.
+   *
+   * The other thing the region rules share. A derived region's id is `item:`
+   * followed by the machine name of the item that opens it — see
+   * \Drupal\neo_toolbar\Plugin\Derivative\ToolbarRegion, which derives one
+   * such region per item whose plugin declares `region_create` — so this is
+   * one question with one answer, and the two rules that ask it ask it here.
+   *
+   * They used to ask it separately and get different answers, in both
+   * directions. The collapse stripped `item:` from every region id whether or
+   * not the id carried one, so the real region `top_start` named a toolbar
+   * item `top_start` and took it down with it. The restore matched
+   * `item:region`, which is a statement about the *item*'s machine name rather
+   * than the region's, so it never fired for the `user` item — one of exactly
+   * two plugins that create regions, and the one this module's own install
+   * config ships.
+   *
+   * @param string $regionId
+   *   The region id.
+   *
+   * @return string|null
+   *   The machine name of the item that opens the region, or NULL when the
+   *   region is a real one that no item derived.
+   */
+  private function triggeringItemId(string $regionId): ?string {
+    if (!str_starts_with($regionId, 'item:')) {
+      return NULL;
+    }
+    return substr($regionId, 5);
   }
 
   /**

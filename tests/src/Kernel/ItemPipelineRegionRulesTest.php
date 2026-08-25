@@ -154,18 +154,23 @@ final class ItemPipelineRegionRulesTest extends KernelTestBase {
 
     $items = $this->loadToolbar()->getItems();
 
-    // `region_menu` is restored: its children have no other way in. The restore
-    // appends, so it lands after the children rather than at its own weight.
-    $this->assertSame(['menu_child', 'opener_child', 'region_menu'], array_keys($items));
+    // Both are restored: their children have no other way in. The restore
+    // appends, so each lands after the children rather than at its own weight,
+    // in the order their regions were met.
+    $this->assertSame(['menu_child', 'opener_child', 'region_menu', 'opener'], array_keys($items));
 
-    // `opener` is not, and the reason is its id: the rule tests the region id
-    // with `strpos($rid, 'item:region') === 0`, so it only ever fires for a
-    // triggering item whose own id starts with `region`. Items created through
-    // the UI do, because the `region` plugin's machine name suggestion is
-    // `region`, `region_2`, and so on — but nothing enforces it, and an item
-    // renamed by hand or written by another package silently stops being
-    // restorable. Pinned as current behaviour, not defended.
-    $this->assertArrayNotHasKey('opener', $items);
+    // `opener` is the assertion this plan's ticket 04 inverted, and its id is
+    // the whole reason it is here. The rule used to test the region id with
+    // `strpos($rid, 'item:region') === 0`, which fired only for a triggering
+    // item whose own id began with `region` — a property of the item, not of
+    // the region it derived. Items created through the UI happened to qualify,
+    // because the `region` plugin's machine name suggestion is `region`,
+    // `region_2` and so on, but nothing enforced it and the module's other
+    // region-creating plugin is `user`, whose item is called `user`. Both
+    // rules now test the `item:` prefix a derived region actually carries, so
+    // an opener is restored for what its region is rather than for what it is
+    // called.
+    $this->assertArrayHasKey('opener', $items);
   }
 
   /**
