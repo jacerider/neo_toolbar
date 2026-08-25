@@ -123,35 +123,39 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   /**
    * The toolbar item element attributes.
    *
-   * @var \Drupal\Core\Template\Attribute
+   * Storage for one of the five attribute bags. NULL until first use — see
+   * ::attributeBag(), which is the only member of this class that names any of
+   * the five directly.
+   *
+   * @var \Drupal\Core\Template\Attribute|null
    */
   protected $attributes;
 
   /**
    * The toolbar item element title attributes.
    *
-   * @var \Drupal\Core\Template\Attribute
+   * @var \Drupal\Core\Template\Attribute|null
    */
   protected $titleAttributes;
 
   /**
    * The toolbar item element icon attributes.
    *
-   * @var \Drupal\Core\Template\Attribute
+   * @var \Drupal\Core\Template\Attribute|null
    */
   protected $iconAttributes;
 
   /**
    * The toolbar item element image attributes.
    *
-   * @var \Drupal\Core\Template\Attribute
+   * @var \Drupal\Core\Template\Attribute|null
    */
   protected $imageAttributes;
 
   /**
    * The toolbar item element badge attributes.
    *
-   * @var \Drupal\Core\Template\Attribute
+   * @var \Drupal\Core\Template\Attribute|null
    */
   protected $badgeAttributes;
 
@@ -197,11 +201,6 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
     $this->id = $id;
     $this->title = $title;
     $this->setAlignment($alignment);
-    $this->attributes = new Attribute();
-    $this->titleAttributes = new Attribute();
-    $this->iconAttributes = new Attribute();
-    $this->imageAttributes = new Attribute();
-    $this->badgeAttributes = new Attribute();
   }
 
   /**
@@ -313,7 +312,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   /**
    * Set the toolbar item element title.
    *
-   * @param string|Drupal\Component\Render\MarkupInterface $title
+   * @param string|\Drupal\Component\Render\MarkupInterface $title
    *   The toolbar item element title.
    *
    * @return $this
@@ -326,7 +325,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   /**
    * Get the toolbar item element title.
    *
-   * @return string|Drupal\Component\Render\MarkupInterface
+   * @return string|\Drupal\Component\Render\MarkupInterface
    *   The toolbar item element title.
    */
   public function getTitle(): string|MarkupInterface {
@@ -387,7 +386,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   /**
    * Set the toolbar item element icon dynamically.
    *
-   * @param string|Drupal\Component\Render\MarkupInterface $text
+   * @param string|\Drupal\Component\Render\MarkupInterface $text
    *   The text to use to find the icon.
    *
    * @return $this
@@ -525,17 +524,62 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
   }
 
   /**
+   * Get one of the element's five attribute bags, creating it on first use.
+   *
+   * The one route to a bag. All fifteen public writers below reach their bag
+   * through here, as does ::toRenderable(), so the five properties are named
+   * in this one method body and a sixth bag costs one ElementAttributeBag case
+   * and three forwarders rather than six edits in three places.
+   *
+   * Two behaviours here are load-bearing.
+   *
+   * It answers the element's *own* object, never a clone. The render array
+   * carries these objects by reference, and ::toRenderable() writes into the
+   * element bag twice after the array has been assembled: a tooltip applies
+   * itself to it, and a modal merges its trigger attributes into it. Neither
+   * reaches a template if a copy is handed out.
+   *
+   * It creates a bag on first use rather than in the constructor, which is
+   * what lets an element be built without five Attribute objects and keeps
+   * where a bag is stored a detail of this method.
+   *
+   * Protected, deliberately: all five bags are already reachable from a
+   * fixture-free unit test through the fifteen methods that have always been
+   * public, so publishing this would add a permanent promise to an API another
+   * package calls and change nothing about what a test has to build.
+   *
+   * @param \Drupal\neo_toolbar\ElementAttributeBag $bag
+   *   The bag to answer.
+   *
+   * @return \Drupal\Core\Template\Attribute
+   *   The element's own attribute object for that bag.
+   */
+  protected function attributeBag(ElementAttributeBag $bag): Attribute {
+    return match ($bag) {
+      ElementAttributeBag::Element => $this->attributes ??= new Attribute(),
+      ElementAttributeBag::Title => $this->titleAttributes ??= new Attribute(),
+      ElementAttributeBag::Icon => $this->iconAttributes ??= new Attribute(),
+      ElementAttributeBag::Image => $this->imageAttributes ??= new Attribute(),
+      ElementAttributeBag::Badge => $this->badgeAttributes ??= new Attribute(),
+    };
+  }
+
+  /**
    * Add a class to the toolbar item element attributes.
    *
-   * @param string|array ...
+   * The collected classes are handed to Attribute::addClass() as a single
+   * argument rather than spread, which is what this method has always done.
+   * For the plain strings every caller passes the two are identical; for an
+   * array argument they are not, and that difference is behaviour.
+   *
+   * @param string|string[] ...$classes
    *   CSS classes to add to the class attribute array.
    *
    * @return $this
    */
-  public function addClass(): self {
-    $args = func_get_args();
-    if ($args) {
-      $this->attributes->addClass($args);
+  public function addClass(...$classes): self {
+    if ($classes) {
+      $this->attributeBag(ElementAttributeBag::Element)->addClass($classes);
     }
     return $this;
   }
@@ -551,7 +595,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @return $this
    */
   public function setAttribute(string $key, string $value): self {
-    $this->attributes->setAttribute($key, $value);
+    $this->attributeBag(ElementAttributeBag::Element)->setAttribute($key, $value);
     return $this;
   }
 
@@ -564,25 +608,22 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @return $this
    */
   public function mergeAttributes(array|Attribute $attributes): self {
-    if (is_array($attributes)) {
-      $attributes = new Attribute($attributes);
-    }
-    $this->attributes->merge($attributes);
+    $this->attributeBag(ElementAttributeBag::Element)
+      ->merge(is_array($attributes) ? new Attribute($attributes) : $attributes);
     return $this;
   }
 
   /**
    * Add a class to the toolbar item element title attributes.
    *
-   * @param string|array ...
+   * @param string|string[] ...$classes
    *   CSS classes to add to the class attribute array.
    *
    * @return $this
    */
-  public function addTitleClass(): self {
-    $args = func_get_args();
-    if ($args) {
-      $this->titleAttributes->addClass($args);
+  public function addTitleClass(...$classes): self {
+    if ($classes) {
+      $this->attributeBag(ElementAttributeBag::Title)->addClass($classes);
     }
     return $this;
   }
@@ -598,7 +639,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @return $this
    */
   public function setTitleAttribute(string $key, string $value): self {
-    $this->titleAttributes->setAttribute($key, $value);
+    $this->attributeBag(ElementAttributeBag::Title)->setAttribute($key, $value);
     return $this;
   }
 
@@ -611,25 +652,22 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @return $this
    */
   public function mergeTitleAttributes(array|Attribute $attributes): self {
-    if (is_array($attributes)) {
-      $attributes = new Attribute($attributes);
-    }
-    $this->titleAttributes->merge($attributes);
+    $this->attributeBag(ElementAttributeBag::Title)
+      ->merge(is_array($attributes) ? new Attribute($attributes) : $attributes);
     return $this;
   }
 
   /**
    * Add a class to the toolbar item element icon attributes.
    *
-   * @param string|array ...
+   * @param string|string[] ...$classes
    *   CSS classes to add to the class attribute array.
    *
    * @return $this
    */
-  public function addIconClass(): self {
-    $args = func_get_args();
-    if ($args) {
-      $this->iconAttributes->addClass($args);
+  public function addIconClass(...$classes): self {
+    if ($classes) {
+      $this->attributeBag(ElementAttributeBag::Icon)->addClass($classes);
     }
     return $this;
   }
@@ -645,7 +683,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @return $this
    */
   public function setIconAttribute(string $key, string $value): self {
-    $this->iconAttributes->setAttribute($key, $value);
+    $this->attributeBag(ElementAttributeBag::Icon)->setAttribute($key, $value);
     return $this;
   }
 
@@ -658,25 +696,22 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @return $this
    */
   public function mergeIconAttributes(array|Attribute $attributes): self {
-    if (is_array($attributes)) {
-      $attributes = new Attribute($attributes);
-    }
-    $this->iconAttributes->merge($attributes);
+    $this->attributeBag(ElementAttributeBag::Icon)
+      ->merge(is_array($attributes) ? new Attribute($attributes) : $attributes);
     return $this;
   }
 
   /**
    * Add a class to the toolbar item element image attributes.
    *
-   * @param string|array ...
+   * @param string|string[] ...$classes
    *   CSS classes to add to the class attribute array.
    *
    * @return $this
    */
-  public function addImageClass(): self {
-    $args = func_get_args();
-    if ($args) {
-      $this->imageAttributes->addClass($args);
+  public function addImageClass(...$classes): self {
+    if ($classes) {
+      $this->attributeBag(ElementAttributeBag::Image)->addClass($classes);
     }
     return $this;
   }
@@ -692,7 +727,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @return $this
    */
   public function setImageAttribute(string $key, string $value): self {
-    $this->imageAttributes->setAttribute($key, $value);
+    $this->attributeBag(ElementAttributeBag::Image)->setAttribute($key, $value);
     return $this;
   }
 
@@ -705,25 +740,22 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @return $this
    */
   public function mergeImageAttributes(array|Attribute $attributes): self {
-    if (is_array($attributes)) {
-      $attributes = new Attribute($attributes);
-    }
-    $this->imageAttributes->merge($attributes);
+    $this->attributeBag(ElementAttributeBag::Image)
+      ->merge(is_array($attributes) ? new Attribute($attributes) : $attributes);
     return $this;
   }
 
   /**
    * Add a class to the toolbar item element badge attributes.
    *
-   * @param string|array ...
+   * @param string|string[] ...$classes
    *   CSS classes to add to the class attribute array.
    *
    * @return $this
    */
-  public function addBadgeClass(): self {
-    $args = func_get_args();
-    if ($args) {
-      $this->badgeAttributes->addClass($args);
+  public function addBadgeClass(...$classes): self {
+    if ($classes) {
+      $this->attributeBag(ElementAttributeBag::Badge)->addClass($classes);
     }
     return $this;
   }
@@ -739,7 +771,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @return $this
    */
   public function setBadgeAttribute(string $key, string $value): self {
-    $this->badgeAttributes->setAttribute($key, $value);
+    $this->attributeBag(ElementAttributeBag::Badge)->setAttribute($key, $value);
     return $this;
   }
 
@@ -752,10 +784,8 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    * @return $this
    */
   public function mergeBadgeAttributes(array|Attribute $attributes): self {
-    if (is_array($attributes)) {
-      $attributes = new Attribute($attributes);
-    }
-    $this->badgeAttributes->merge($attributes);
+    $this->attributeBag(ElementAttributeBag::Badge)
+      ->merge(is_array($attributes) ? new Attribute($attributes) : $attributes);
     return $this;
   }
 
@@ -900,11 +930,6 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
       '#image' => $image,
       '#image_size' => $this->getImageSize(),
       '#badge' => $this->getBadge(),
-      '#attributes' => $this->attributes,
-      '#title_attributes' => $this->titleAttributes,
-      '#icon_attributes' => $this->iconAttributes,
-      '#image_attributes' => $this->imageAttributes,
-      '#badge_attributes' => $this->badgeAttributes,
       '#access' => $access,
       '#weight' => $this->weight,
       '#attached' => $this->attached,
@@ -914,10 +939,17 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
         'max-age' => $this->getCacheMaxAge(),
       ],
     ];
+    // The five bags, from the one place the set is stated. Each case's value is
+    // the render-array key its bag is emitted under, and what goes in is the
+    // element's own object: both branches below write into the element bag
+    // after this point and reach the template only by reference.
+    foreach (ElementAttributeBag::cases() as $bag) {
+      $build['#' . $bag->value] = $this->attributeBag($bag);
+    }
     if ($this->tooltipStatus && !$titleStatus) {
       $tooltip = new Tooltip($title);
       $tooltip->setPlacement($alignment === 'vertical' ? 'right' : 'bottom');
-      $tooltip->applyToAttribute($this->attributes);
+      $tooltip->applyToAttribute($this->attributeBag(ElementAttributeBag::Element));
       foreach ($tooltip->getAttachments() as $type => $attachments) {
         foreach ($attachments as $attachment) {
           $build['#attached'][$type][] = $attachment;
