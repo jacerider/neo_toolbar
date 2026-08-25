@@ -26,11 +26,12 @@ use PHPUnit\Framework\Attributes\Group;
  * 3. A triggering item that lost its own access is restored when its derived
  *    region still has children, because the children have no other way in.
  *
- * One behaviour is pinned as current rather than defended: the memo is computed
- * once and ignores edit mode, so `setEditMode()` after a first `getItems()`
- * answers the previous mode's items. Nothing hits it today because the render
- * path sets the mode on a freshly-loaded entity — an invariant held by call
- * order, not by the code.
+ * A fourth behaviour was pinned here as current rather than defended: the memo
+ * was computed once and ignored edit mode, so `setEditMode()` after a first
+ * `getItems()` answered the previous mode's items. This plan's ticket 05
+ * inverted it — the memo is discarded when the mode actually changes — so what
+ * the mode-switching test below now asserts is that the mode just set is the
+ * mode answered, in both directions.
  *
  * Derived regions are `item:<item id>`, produced by
  * \Drupal\neo_toolbar\Plugin\Derivative\ToolbarRegion for every item whose
@@ -174,35 +175,37 @@ final class ItemPipelineRegionRulesTest extends KernelTestBase {
   }
 
   /**
-   * The memo is computed once and never reconsiders the mode.
+   * The memo is recomputed when the mode it answered for changes.
    *
-   * Covers: it answers the previous mode's items when edit mode is set after a
-   * first call.
+   * Covers: it answers the items of the mode just set when edit mode is set
+   * after a first call.
    */
-  public function testAnswersPreviousModeItemsWhenEditModeSetAfterFirstCall(): void {
+  public function testAnswersTheModeJustSetWhenEditModeSetAfterFirstCall(): void {
     $this->createItem('visible', ['weight' => 10]);
     $this->createItem('hidden', ['weight' => 20], 'forbidden');
 
     // A first call in the default mode filters by access and memoises.
     $filtered = $this->loadToolbar();
     $this->assertSame(['visible'], array_keys($filtered->getItems()));
-    // Edit mode now arrives too late. The flag is set on the object and
-    // `isEditMode()` agrees, but `getItems()` short-circuits on the memo and
-    // answers the filtered list the previous mode produced.
+    // Edit mode arriving second is still edit mode. This is the assertion
+    // ticket 05 inverted: the memo used to short-circuit here and answer the
+    // filtered list the previous mode produced, and now `setEditMode()`
+    // discards it because the answer it holds is the other mode's.
     $filtered->setEditMode();
     $this->assertTrue($filtered->isEditMode());
-    $this->assertSame(['visible'], array_keys($filtered->getItems()));
+    $this->assertSame(['visible', 'hidden'], array_keys($filtered->getItems()));
 
-    // The same trap in the other direction: a toolbar memoised in edit mode
-    // keeps answering unfiltered after the mode is turned off.
+    // And the mirror image: a toolbar memoised in edit mode goes back to the
+    // filtered answer once the mode is turned off.
     $editing = $this->loadToolbar()->setEditMode();
     $this->assertSame(['visible', 'hidden'], array_keys($editing->getItems()));
     $editing->setEditMode(FALSE);
     $this->assertFalse($editing->isEditMode());
-    $this->assertSame(['visible', 'hidden'], array_keys($editing->getItems()));
+    $this->assertSame(['visible'], array_keys($editing->getItems()));
 
-    // Nothing hits this today because the render path sets the mode on a
+    // What the render path does, and did before: set the mode on a
     // freshly-loaded entity, which memoises against the mode it was given.
+    // That answer is the one thing here the inversion does not move.
     $this->assertSame(['visible', 'hidden'], array_keys($this->loadToolbar()->setEditMode()->getItems()));
   }
 

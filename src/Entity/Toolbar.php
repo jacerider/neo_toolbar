@@ -110,9 +110,25 @@ final class Toolbar extends ConfigEntityBase implements ToolbarInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * The memo goes when the mode changes. The pipeline is skipped entirely in
+   * edit mode, so what it answers is mode-specific while the memo holding it
+   * is not: a mode set after a first call used to answer the previous mode's
+   * items, and the cacheable metadata beside them recorded an access pass that
+   * the new mode does not run. Correctness rested on every call site setting
+   * the mode on a freshly-loaded entity — and this entity type declares
+   * `static_cache = true`, so the second load in a request is not one.
+   *
+   * A mode that did not change discards nothing, because the memo it would
+   * throw away is still the answer to the question being asked.
    */
   public function setEditMode(bool $isEditMode = TRUE):self {
-    $this->isEditMode = !empty($isEditMode);
+    $isEditMode = !empty($isEditMode);
+    if ($isEditMode !== $this->isEditMode) {
+      $this->isEditMode = $isEditMode;
+      $this->items = NULL;
+      $this->itemsCacheableMetadata = NULL;
+    }
     return $this;
   }
 
