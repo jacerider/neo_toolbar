@@ -93,14 +93,32 @@ function neo_toolbar_toolbar_view_access(): bool {
   // The two branches below are mutually exclusive by construction: the first
   // needs the toolbar permission and the second needs its absence. Neither
   // returns, so every exit leaves through the single write below.
+  //
+  // User 1 is exempt from the first branch, and the exemption is there to stop
+  // an accident rather than to express a preference. Core's own UserSession
+  // answers every permission check for user 1 with TRUE by short-circuit, so on
+  // a site that installs core's toolbar alongside this one, user 1 holds
+  // 'access toolbar' without any site builder having granted it and would be
+  // handed core's toolbar automatically — not because anyone chose it.
+  //
+  // The comparison casts, matching core's own idiom in
+  // UserSession::hasPermission(), because the account id reaches this function
+  // as whatever the database driver put in the row: a driver setting
+  // \PDO::ATTR_STRINGIFY_FETCHES answers the string '1' and one returning
+  // native types answers the integer 1. Comparing against either literal alone
+  // would make one of those two sites behave differently from the other for no
+  // reason a reader could find.
+  //
+  // The same permission short-circuit means user 1 is never denied above and so
+  // never reaches the masquerade branch below: user 1 always sees the Neo
+  // toolbar.
   if (
     $access &&
-    $uid !== '1' &&
+    (int) $uid !== 1 &&
     \Drupal::moduleHandler()->moduleExists('toolbar') &&
     \Drupal::currentUser()->hasPermission('access toolbar')
   ) {
     // If core toolbar is enabled and user has access, do not show neo_toolbar.
-    // This does not apply to user 1 who will always see neo_toolbar.
     $access = FALSE;
   }
   elseif (!$access && \Drupal::hasService('masquerade')) {

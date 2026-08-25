@@ -35,32 +35,39 @@ use PHPUnit\Framework\Attributes\Group;
  *    now needs `drupal_static_reset('neo_toolbar_toolbar_view_access')`, and
  *    two of the tests below say so where they call it.
  *
- * A third defect was expected and is not there. The plan predicted that the
- * user-1 exemption can never fire, on the grounds that `$account->id()` is an
- * `int` and the comparison is `!== '1'`. On this site it is not an `int`: the
- * mysql driver sets `\PDO::ATTR_STRINGIFY_FETCHES`, every fetched column
- * arrives as a string, and an account read back through storage — which is
- * what both `Cookie::getUserFromSession()` and `AccountProxy::getAccount()` do
- * — answers `id()` with the string `'1'`. The exemption therefore fires, and
- * user 1 sees the toolbar exactly as the comment above the branch claims. What
- * the branch really carries is a type dependency rather than a dead exemption,
- * so `testUserOneIsExemptOnlyWhileItsIdIsNotAnInteger()` pins both sides of it:
- * the string id this site's driver produces, and the integer id a driver
- * returning native types would produce. Changing `'1'` to `1` would not
- * repair a dead branch — it would take user 1's toolbar away on every mysql
- * site.
+ * The third thing this class pins is the user-1 exemption, whose story changed
+ * twice. The plan predicted the exemption could never fire, on the grounds
+ * that `$account->id()` is an `int` and the comparison was `!== '1'`. On this
+ * site it was not an `int`: the mysql driver sets
+ * `\PDO::ATTR_STRINGIFY_FETCHES`, every fetched column arrives as a string,
+ * and an account read back through storage — which is what both
+ * `Cookie::getUserFromSession()` and `AccountProxy::getAccount()` do — answers
+ * `id()` with the string `'1'`. The guard closed and user 1 kept its toolbar,
+ * but by accident of a database driver: the same account delivered with the
+ * native integer id a driver without that flag returns lost it, which
+ * `testUserOneIsExemptOnlyWhileItsIdIsNotAnInteger()` used to pin.
  *
- * That is also why the clause is still here after the ticket that restructured
- * this gate. That ticket described it as dead and proposed deleting it as a
- * provable no-op; on this site's storage it is live, so deleting it would have
- * changed what user 1 is told — the one thing the same ticket says it must not
- * do. `testTellsEveryAccountExactlyWhatItToldThemBefore()` is the assertion
- * that holds the line.
+ * The comparison is now `(int) $uid !== 1`, matching core's own idiom in
+ * `UserSession::hasPermission()`, so the exemption is a decision rather than a
+ * driver's side effect and holds whichever type the id arrives as. That test
+ * is replaced here by
+ * `testExemptsUserOneWhetherItsIdIsAnIntegerOrNumericString()`, whose
+ * integer-id assertion is the inverse of the one it supersedes.
  *
- * Core's `toolbar` is enabled here, which is one of the two tests the spec
+ * What the exemption is for is the accident it prevents. Core's `UserSession`
+ * short-circuits every permission check for user 1, so user 1 holds core's
+ * `access toolbar` without a site builder ever having granted it and would be
+ * handed core's toolbar automatically rather than by anyone's choice. The same
+ * short-circuit means user 1 is never denied the module's own permission and
+ * never reaches the masquerade branch either: user 1 always sees the Neo
+ * toolbar.
+ *
+ * Core's `toolbar` is enabled here, which is one of the two places the spec
  * names as deliberately going wider than the `system`/`user`/`neo_toolbar`
- * floor: three of the six criteria are about the branch that defers to it, and
- * `moduleExists('toolbar')` cannot be driven any other way.
+ * floor: most of the criteria below are about the branch that defers to it, and
+ * `moduleExists('toolbar')` cannot be driven any other way. The one test that
+ * needs the other side of that check uninstalls it inside the method, because
+ * the module list is a property of the class.
  *
  * The masquerade branch is reached through the fixtures' stand-in registered
  * into the container under the `masquerade` service id. `masquerade` is not
@@ -114,9 +121,10 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     // it in production reaches it after the module handler has loaded that
     // file. Ask for it by name rather than trusting the boot order.
     $this->container->get('module_handler')->loadInclude('neo_toolbar', 'module');
-    // Every site has a user 1, and one test signs in as it. Creating it here
-    // also keeps it out of the way of the other five: with uid 1 taken, no
-    // ordinary fixture account can inherit the super user's permissions.
+    // Every site has a user 1, and four of the tests below sign in as it.
+    // Creating it here also keeps it out of the way of the rest: with uid 1
+    // taken, no ordinary fixture account can inherit the super user's
+    // permissions.
     User::create([
       'uid' => 1,
       'name' => 'user_one',
@@ -184,74 +192,126 @@ final class ToolbarAccessGateTest extends KernelTestBase {
   }
 
   /**
-   * User 1's exemption stands or falls on the type of its account id.
+   * User 1 keeps the Neo toolbar on a site that also runs core's.
    *
-   * The branch that defers to core's toolbar guards itself with
-   * `\Drupal::currentUser()->id() !== '1'`, and the comment above it says the
-   * deferral "does not apply to user 1 who will always see neo_toolbar".
+   * This is the whole behaviour the exemption exists for. Core's `UserSession`
+   * answers every permission check for user 1 with TRUE by short-circuit, so
+   * on a site that installs core's `toolbar` alongside this one user 1 holds
+   * `access toolbar` without a site builder having granted it, and the
+   * deferral would fire for user 1 automatically — not because anyone chose
+   * it. The exemption is what stops that.
    *
-   * The plan predicted this exemption is dead, because `id()` answers an
-   * `int` and `!==` compares type. It is not dead here. The mysql driver sets
-   * `\PDO::ATTR_STRINGIFY_FETCHES`, so an account read back out of storage
-   * answers `id()` with the string `'1'` — and reading it back out of storage
-   * is what production does, through `Cookie::getUserFromSession()` on a real
-   * request and through `AccountProxy::getAccount()` everywhere else. The
-   * exemption fires and user 1 keeps its toolbar.
+   * Both of the shapes production hands `\Drupal::currentUser()` are driven,
+   * because the answer must not depend on which one arrives: an account read
+   * back through storage, and a `UserSession` built straight from a
+   * `users_field_data` row. The memo is keyed by account id and both are
+   * account 1, so it is cleared between them.
    *
-   * What the branch actually carries is a dependency on that type, which is
-   * why both sides are pinned here: the same account id, delivered as the
-   * integer a driver without that flag would return, is denied. A driver that
-   * returns native integers rather than strings puts a site on that side of
-   * the line without a line of this module changing.
-   *
-   * Covers: it denies user 1 on the same terms, because the user-1 exemption
-   * never fires — corrected: on this site's storage the exemption does fire,
-   * and user 1 is denied only when its id arrives as an integer.
+   * Covers: it allows user 1 when core toolbar is installed and user 1 may use
+   * it.
    */
-  public function testUserOneIsExemptOnlyWhileItsIdIsNotAnInteger(): void {
-    // The super user access policy is on for a test outside `core`, so user 1
-    // holds every permission on the site without being granted one — which is
-    // both the shape a real site has and the shape that reaches this branch.
-    $userOne = User::load(1);
-    $this->signIn($userOne);
+  public function testAllowsUserOneWhenCoreToolbarIsInstalledAndUserOneMayUseIt(): void {
+    $this->assertTrue(\Drupal::moduleHandler()->moduleExists('toolbar'));
+
+    // Through storage, which is what `AccountProxy::getAccount()` does.
+    $this->signIn(User::load(1));
     $this->assertTrue(\Drupal::currentUser()->hasPermission('access neo_toolbar'));
     $this->assertTrue(\Drupal::currentUser()->hasPermission('access toolbar'));
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
 
-    // The premise, stated as an assertion: read back through storage the id is
-    // a string, so the branch's `!== '1'` is equal, the guard closes and the
-    // deferral is skipped.
+    // Through a session, which is what `Cookie::getUserFromSession()` does.
+    drupal_static_reset('neo_toolbar_toolbar_view_access');
+    $this->signIn($this->userOneSession());
+    $this->assertTrue(\Drupal::currentUser()->hasPermission('access neo_toolbar'));
+    $this->assertTrue(\Drupal::currentUser()->hasPermission('access toolbar'));
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+  }
+
+  /**
+   * With no core toolbar to defer to, user 1 is allowed by the plain path.
+   *
+   * The exemption is a clause of the deferral and nothing else, so on the
+   * majority of sites — this one included, where `core.extension.yml` does not
+   * enable core's `toolbar` — it has nothing to exempt anyone from and user 1
+   * is allowed by the module's own permission alone. Asserting that is what
+   * says the clause did not reach past the branch it guards.
+   *
+   * Covers: it allows user 1 when core toolbar is not installed.
+   */
+  public function testAllowsUserOneWhenCoreToolbarIsNotInstalled(): void {
+    $this->uninstallCoreToolbar();
+    $this->assertFalse(\Drupal::moduleHandler()->moduleExists('toolbar'));
+
+    $this->signIn(User::load(1));
+    $this->assertTrue(\Drupal::currentUser()->hasPermission('access neo_toolbar'));
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+
+    drupal_static_reset('neo_toolbar_toolbar_view_access');
+    $this->signIn($this->userOneSession());
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+  }
+
+  /**
+   * The exemption is a decision, not a side effect of a database driver.
+   *
+   * The clause used to read `$uid !== '1'`, an untyped comparison against a
+   * string, and whether it fired came down to what the driver put in the row:
+   * mysql's `\PDO::ATTR_STRINGIFY_FETCHES` makes `id()` answer `'1'` and the
+   * guard closed, while a driver returning native integers answered `1` and
+   * the guard opened. One module, two behaviours, chosen by neither.
+   *
+   * `(int) $uid !== 1` is core's own idiom from `UserSession::hasPermission()`
+   * and answers the same for both, which is what makes the exemption a rule
+   * rather than an accident. The integer half of this test is the assertion
+   * that `testUserOneIsExemptOnlyWhileItsIdIsNotAnInteger()` made in reverse.
+   *
+   * Covers: it exempts user 1 whether the account id arrives as an integer or
+   * a numeric string.
+   */
+  public function testExemptsUserOneWhetherItsIdIsAnIntegerOrNumericString(): void {
+    // The numeric string this site's driver produces.
+    $this->signIn(User::load(1));
     $this->assertSame('1', \Drupal::currentUser()->id());
     $this->assertTrue(neo_toolbar_toolbar_view_access());
 
-    // An ordinary account holding the same two permissions is denied, which is
-    // what makes the previous answer the exemption and not something else.
-    $this->signIn($this->createAccount('ordinary', [
+    // The native integer a driver without that flag produces. The memo is
+    // keyed by account id and both halves are account 1, so clearing it is
+    // what keeps this a question about the id's type.
+    drupal_static_reset('neo_toolbar_toolbar_view_access');
+    $this->signIn($this->userOneSession());
+    $this->assertSame(1, \Drupal::currentUser()->id());
+    $this->assertTrue(neo_toolbar_toolbar_view_access());
+  }
+
+  /**
+   * Every account that is not user 1 is deferred exactly as before.
+   *
+   * The exemption is one account's, and the cast is not a numeric-id amnesty:
+   * an ordinary account holding both permissions is denied whether its id
+   * arrives as the string storage returns or the integer a session carries.
+   *
+   * Covers: it still denies a non-user-1 account holding both the toolbar
+   * permission and core toolbar access.
+   */
+  public function testStillDeniesNonUserOneAccountsHoldingBothPermissions(): void {
+    $account = $this->createAccount('not_user_one', [
       'access neo_toolbar',
       'access toolbar',
-    ]));
-    $this->assertFalse(neo_toolbar_toolbar_view_access());
+    ]);
 
-    // The other side of the type dependency, in the shape production builds it
-    // in: `Cookie::getUserFromSession()` hands `\Drupal::currentUser()` a
-    // `UserSession` constructed straight from a `users_field_data` row, and
-    // `UserSession::id()` answers whatever the driver put in that row. Give it
-    // the integer a driver without `\PDO::ATTR_STRINGIFY_FETCHES` would, and
-    // `!== '1'` is no longer equal: the guard opens, the deferral is taken and
-    // user 1 loses its toolbar.
-    //
-    // The gate memo is keyed by account id and both halves of this comparison
-    // are account 1, so the memo would otherwise answer the second with the
-    // first's result. Clearing it is what makes this a question about the id's
-    // type rather than about the memo.
-    drupal_static_reset('neo_toolbar_toolbar_view_access');
-    $this->signIn(new UserSession([
-      'uid' => 1,
-      'name' => 'user_one',
-      'roles' => ['authenticated'],
-    ]));
-    $this->assertSame(1, \Drupal::currentUser()->id());
+    $this->signIn($account);
+    $this->assertSame((string) $account->id(), \Drupal::currentUser()->id());
     $this->assertTrue(\Drupal::currentUser()->hasPermission('access neo_toolbar'));
     $this->assertTrue(\Drupal::currentUser()->hasPermission('access toolbar'));
+    $this->assertFalse(neo_toolbar_toolbar_view_access());
+
+    drupal_static_reset('neo_toolbar_toolbar_view_access');
+    $this->signIn(new UserSession([
+      'uid' => (int) $account->id(),
+      'name' => 'not_user_one',
+      'roles' => ['authenticated', 'not_user_one'],
+    ]));
+    $this->assertSame((int) $account->id(), \Drupal::currentUser()->id());
     $this->assertFalse(neo_toolbar_toolbar_view_access());
   }
 
@@ -498,15 +558,18 @@ final class ToolbarAccessGateTest extends KernelTestBase {
    * already pins is walked again here in one request, and the memo is asserted
    * as the record of what each account was told.
    *
-   * User 1 is in that table on purpose. The ticket describes the
-   * `\Drupal::currentUser()->id() !== '1'` clause as dead and proposes deleting
-   * it as a no-op; on this site it is not dead — see
-   * `testUserOneIsExemptOnlyWhileItsIdIsNotAnInteger()` — and deleting it would
-   * take user 1's toolbar away, which is the one thing this ticket says it must
-   * not do. The clause therefore stays, and this is the assertion that says so.
+   * User 1 is in that table on purpose, and its entry is the one line of it the
+   * next ticket had any licence to move. It does not: read back through storage
+   * the id is the numeric string `'1'`, which the old untyped comparison and
+   * the integer one both exempt, so the answer is the same on either side of
+   * that change. What moved is the reason — see
+   * `testExemptsUserOneWhetherItsIdIsAnIntegerOrNumericString()` — and a reason
+   * is not something this table records.
    *
    * Covers: it tells every account exactly what it told them before, user 1
    * included.
+   * Covers: it leaves every other permutation answering exactly what ticket 01
+   * left it answering.
    */
   public function testTellsEveryAccountExactlyWhatItToldThemBefore(): void {
     $expected = [];
@@ -549,8 +612,7 @@ final class ToolbarAccessGateTest extends KernelTestBase {
     $expected[(int) $idle->id()] = FALSE;
 
     // User 1, read back through storage exactly as production hands it to the
-    // proxy: allowed, because the deferral exempts it while its id is the
-    // string this site's driver returns.
+    // proxy: allowed, because the deferral exempts it.
     $userOne = User::load(1);
     $this->signIn($userOne);
     $this->assertSame('1', \Drupal::currentUser()->id());
@@ -598,6 +660,46 @@ final class ToolbarAccessGateTest extends KernelTestBase {
    */
   protected function signIn(AccountInterface $account): void {
     \Drupal::currentUser()->setAccount($account);
+  }
+
+  /**
+   * User 1 as a session, which is the other shape production delivers.
+   *
+   * `Cookie::getUserFromSession()` hands `\Drupal::currentUser()` a
+   * `UserSession` built straight from a `users_field_data` row, and
+   * `UserSession::id()` answers whatever the driver put in that row. Building
+   * it with a native `int` is what a driver without
+   * `\PDO::ATTR_STRINGIFY_FETCHES` produces, and it is the delivery the old
+   * `!== '1'` comparison failed to exempt.
+   *
+   * @return \Drupal\Core\Session\UserSession
+   *   User 1, with an id that is an integer.
+   */
+  protected function userOneSession(): UserSession {
+    return new UserSession([
+      'uid' => 1,
+      'name' => 'user_one',
+      'roles' => ['authenticated'],
+    ]);
+  }
+
+  /**
+   * Removes core's toolbar module from the running site.
+   *
+   * The deferral is guarded by `moduleExists('toolbar')`, and this class
+   * installs core's toolbar for the five tests that need the branch reachable.
+   * Uninstalling rebuilds the container, so the current user proxy is replaced
+   * and the account has to be signed in afterwards rather than before.
+   */
+  protected function uninstallCoreToolbar(): void {
+    // `user` clears any per-user data an uninstalled module left behind, which
+    // is a table this class has no other reason to install.
+    $this->installSchema('user', ['users_data']);
+    $this->container->get('module_installer')->uninstall(['toolbar']);
+    $this->container = \Drupal::getContainer();
+    // A rebuilt module handler has not loaded the `.module` file the gate lives
+    // in, the same reason setUp() asks for it by name.
+    $this->container->get('module_handler')->loadInclude('neo_toolbar', 'module');
   }
 
 }
