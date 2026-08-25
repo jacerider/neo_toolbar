@@ -26,3 +26,11 @@ services:
   plugin.manager.neo_toolbar_badge:
     class: Drupal\neo_toolbar\ToolbarBadgePluginManager
     parent: default_plugin_manager
+
+  Drupal\neo_toolbar\Hook\NeoToolbarHooks:
+    # The hook collector registers a hook class as an autowired service under
+    # its own class name when the container has no definition for it. This one
+    # is written out instead, because both collaborators are named services
+    # rather than autowirable types.
+    class: Drupal\neo_toolbar\Hook\NeoToolbarHooks
+    arguments: ['@neo_toolbar.repository', '@neo_toolbar.access_gate']

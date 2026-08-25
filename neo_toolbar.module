@@ -5,63 +5,7 @@
  * Hook implementations and global functions.
  */
 
-use Drupal\block\BlockInterface;
-use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Access\AccessResultInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Template\Attribute;
-
-/**
- * Implements hook_page_top().
- *
- * Add toolbar to the top of the page.
- */
-function neo_toolbar_page_top(array &$page_top) {
-  if (!neo_toolbar_toolbar_view_access()) {
-    return;
-  }
-
-  /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
-  $repository = \Drupal::service('neo_toolbar.repository');
-  if ($toolbar = $repository->getActive()) {
-    // Remove the core toolbar if it exists.
-    unset($page_top['toolbar']);
-
-    $page_top['neo_toolbar'] = [
-      '#type' => 'neo_toolbar',
-      '#toolbar' => $toolbar,
-      '#cache' => [
-        'keys' => ['neo_toolbar'],
-        'contexts' => $toolbar->getCacheContexts(),
-        'tags' => $toolbar->getCacheTags(),
-      ],
-    ];
-  }
-}
-
-/**
- * Implements hook_local_tasks_alter().
- */
-function neo_toolbar_local_tasks_alter(&$definitions) {
-  if (isset($definitions['entity.media.collection'])) {
-    // Move media collection to its own tab.
-    $definitions['entity.media.collection']['base_route'] = 'entity.media.collection';
-  }
-}
-
-/**
- * Implements hook_module_implements_alter().
- */
-function neo_toolbar_module_implements_alter(&$implementations, $hook) {
-  switch ($hook) {
-    // Move our hook_page_top() implementation to the end of the list.
-    case 'page_top':
-      $group = $implementations['neo_toolbar'];
-      unset($implementations['neo_toolbar']);
-      $implementations['neo_toolbar'] = $group;
-      break;
-  }
-}
 
 /**
  * Generic access callback for the toolbar.
@@ -77,37 +21,6 @@ function neo_toolbar_module_implements_alter(&$implementations, $hook) {
  */
 function neo_toolbar_toolbar_view_access(): bool {
   return \Drupal::service('neo_toolbar.access_gate')->hasAccess();
-}
-
-/**
- * Implements hook_block_access().
- */
-function neo_toolbar_block_access(BlockInterface $block, string $operation, AccountInterface $account): ?AccessResultInterface {
-  if (!neo_toolbar_toolbar_view_access()) {
-    return NULL;
-  }
-  switch ($block->getPluginId()) {
-    case 'local_actions_block':
-      // Hide local tasks block if user can use the toolbar AND the local tasks
-      // plugin is enabled.
-      /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
-      $repository = \Drupal::service('neo_toolbar.repository');
-      if ($repository->hasToolbarItemsOfType('local_actions')) {
-        return AccessResult::forbidden()->cachePerPermissions();
-      }
-      break;
-
-    case 'local_tasks_block':
-      // Hide local actions block if the user can use the toolbar AND the
-      // local tasks plugin is enabled.
-      /** @var \Drupal\neo_toolbar\ToolbarRepository $repository */
-      $repository = \Drupal::service('neo_toolbar.repository');
-      if ($repository->hasToolbarItemsOfType('local_tasks')) {
-        return AccessResult::forbidden()->cachePerPermissions();
-      }
-      break;
-  }
-  return NULL;
 }
 
 /**
