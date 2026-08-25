@@ -4,7 +4,7 @@ description: 'Provides a toolbar that shows the top-level administration menu it
 package: Neo
 neo: true
 version: 1.0.51
-core_version_requirement: ^10.3 || ^11
+core_version_requirement: ^11.3
 dependencies:
   - drupal:token
   - neo:neo
