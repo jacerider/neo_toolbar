@@ -1,0 +1,16 @@
+# Two regions the tests own, one per alignment.
+#
+# neo_toolbar ships five real regions plus a deriver, and asserting the region
+# filter or the derived-region collapse against those would pin the suite to a
+# shipped shape a later plan may legitimately change. These two exist so the
+# tests can name a region and know exactly what is in it.
+test_horizontal:
+  label: 'Test Horizontal'
+  alignment: horizontal
+  position: start
+  weight: 100
+test_vertical:
+  label: 'Test Vertical'
+  alignment: vertical
+  position: end
+  weight: 101

@@ -1,0 +1,21 @@
+# Schema for the fixture item plugins' settings.
+#
+# Both plugins read their view access answer out of the item entity's own
+# `settings`, which `neo_toolbar.neo_toolbar_item.*` types as
+# `neo_toolbar_item.settings.[%parent.plugin]`. Kernel tests run with strict
+# config schema, so without these the fixture items cannot be saved.
+neo_toolbar_item.settings.neo_toolbar_test_access:
+  type: neo_toolbar_item_settings
+  label: 'Neo toolbar test item settings'
+  mapping:
+    access:
+      type: string
+      label: 'View access answer'
+
+neo_toolbar_item.settings.neo_toolbar_test_region:
+  type: neo_toolbar_item_settings
+  label: 'Neo toolbar test region item settings'
+  mapping:
+    access:
+      type: string
+      label: 'View access answer'

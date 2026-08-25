@@ -1,0 +1,8 @@
+name: 'Neo | Toolbar | Test'
+type: module
+description: 'Fixture module for the neo_toolbar test suite: item plugins whose view access is declared per item, two toolbar regions, a masquerade stand-in and a link-trait harness.'
+package: Testing
+hidden: true
+core_version_requirement: ^10.3 || ^11
+dependencies:
+  - neo_toolbar:neo_toolbar
