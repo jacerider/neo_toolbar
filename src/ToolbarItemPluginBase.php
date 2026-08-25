@@ -174,7 +174,9 @@ abstract class ToolbarItemPluginBase extends PluginBase implements ToolbarItemPl
    * {@inheritdoc}
    */
   public function getIcon(): string|null {
-    return NULL;
+    // A definition contributed by an alter hook is merged after the plugin
+    // manager's defaults, so it can lack the key entirely.
+    return $this->pluginDefinition['icon'] ?? NULL;
   }
 
   /**

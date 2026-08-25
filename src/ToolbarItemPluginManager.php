@@ -31,6 +31,7 @@ final class ToolbarItemPluginManager extends DefaultPluginManager implements Con
     'label' => '',
     'description' => '',
     'region_create' => FALSE,
+    'icon' => NULL,
   ];
 
   /**

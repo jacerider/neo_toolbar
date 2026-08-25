@@ -25,7 +25,7 @@ final class ToolbarItem extends AttributeBase {
    *   (optional) The human-readable name of the plugin.
    * @param \Drupal\Core\StringTranslation\TranslatableMarkup|null $description
    *   (optional) A brief description of the plugin.
-   * @param string|null $region_create
+   * @param bool|null $region_create
    *   (optional) Whether the plugin should create a new region.
    * @param \Drupal\Core\Plugin\Context\ContextDefinitionInterface[] $context_definitions
    *   (optional) An array of context definitions describing the context used by
@@ -34,6 +34,14 @@ final class ToolbarItem extends AttributeBase {
    *   (optional) The deriver class.
    * @param string|null $provider
    *   (optional) The module that provides this plugin.
+   * @param string|null $icon
+   *   (optional) The icon the plugin shows on the toolbar. A plugin whose icon
+   *   is fixed declares it here and inherits
+   *   \Drupal\neo_toolbar\ToolbarItemPluginBase::getIcon(); a plugin whose icon
+   *   comes from its own configuration overrides that method instead. This
+   *   parameter is deliberately last, after the provider: the attribute is
+   *   public API, so inserting it beside the label would shift every parameter
+   *   after it and break any positional declaration.
    */
   public function __construct(
     public readonly string $id,
@@ -43,6 +51,7 @@ final class ToolbarItem extends AttributeBase {
     public readonly array $context_definitions = [],
     public readonly ?string $deriver = NULL,
     public ?string $provider = NULL,
+    public readonly ?string $icon = NULL,
   ) {}
 
 }

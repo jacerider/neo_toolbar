@@ -79,6 +79,11 @@ interface ToolbarItemPluginInterface extends ConfigurableInterface, PluginFormIn
 
   /**
    * Get the plugin icon.
+   *
+   * Declaring the icon in the plugin's
+   * \Drupal\neo_toolbar\Attribute\ToolbarItem attribute is the ordinary route,
+   * and the base class answers it from the plugin definition; overriding this
+   * method is for an icon that depends on the item's configuration.
    */
   public function getIcon(): string|null;
 
