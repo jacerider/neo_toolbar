@@ -551,7 +551,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    *
    * @return $this
    */
-  public function addClass(...$classes): self {
+  public function addClass(string|array ...$classes): self {
     if ($classes) {
       $this->attributeBag(ElementAttributeBag::Element)->addClass($classes);
     }
@@ -595,7 +595,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    *
    * @return $this
    */
-  public function addTitleClass(...$classes): self {
+  public function addTitleClass(string|array ...$classes): self {
     if ($classes) {
       $this->attributeBag(ElementAttributeBag::Title)->addClass($classes);
     }
@@ -639,7 +639,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    *
    * @return $this
    */
-  public function addIconClass(...$classes): self {
+  public function addIconClass(string|array ...$classes): self {
     if ($classes) {
       $this->attributeBag(ElementAttributeBag::Icon)->addClass($classes);
     }
@@ -683,7 +683,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    *
    * @return $this
    */
-  public function addImageClass(...$classes): self {
+  public function addImageClass(string|array ...$classes): self {
     if ($classes) {
       $this->attributeBag(ElementAttributeBag::Image)->addClass($classes);
     }
@@ -727,7 +727,7 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
    *
    * @return $this
    */
-  public function addBadgeClass(...$classes): self {
+  public function addBadgeClass(string|array ...$classes): self {
     if ($classes) {
       $this->attributeBag(ElementAttributeBag::Badge)->addClass($classes);
     }
