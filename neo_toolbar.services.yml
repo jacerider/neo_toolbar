@@ -1,3 +1,14 @@
+parameters:
+  # Every hook this module implements is a method on a class under `src/Hook`,
+  # so there is nothing procedural left for core's hook collector to find. This
+  # is the parameter core provides for exactly that statement, set by a dozen
+  # core modules. It is not cosmetic: without it the collector reads
+  # `neo_toolbar_toolbar_view_access()` — a global function that is not a hook
+  # at all — as an implementation of a `hook_toolbar_view_access` that does not
+  # exist, and registers it as one. Extension loading is unaffected, so the
+  # `.module` file is still included and that forwarder is still defined.
+  neo_toolbar.skip_procedural_hook_scan: true
+
 services:
   plugin.manager.neo_toolbar_item:
     class: Drupal\neo_toolbar\ToolbarItemPluginManager

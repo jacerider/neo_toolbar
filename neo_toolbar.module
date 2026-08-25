@@ -2,10 +2,14 @@
 
 /**
  * @file
- * Hook implementations and global functions.
+ * The module's one global function.
+ *
+ * Every hook this module implements lives on a class under `src/Hook`, and the
+ * module declares `neo_toolbar.skip_procedural_hook_scan` so that core's hook
+ * collector stops reading this file looking for more. Extension loading is
+ * unaffected by that parameter — the module handler includes this file
+ * regardless — which is what keeps the function below defined.
  */
-
-use Drupal\Core\Template\Attribute;
 
 /**
  * Generic access callback for the toolbar.
@@ -21,125 +25,4 @@ use Drupal\Core\Template\Attribute;
  */
 function neo_toolbar_toolbar_view_access(): bool {
   return \Drupal::service('neo_toolbar.access_gate')->hasAccess();
-}
-
-/**
- * Implements hook_theme().
- */
-function neo_toolbar_theme(): array {
-  return [
-    'neo_toolbar' => [
-      'variables' => ['toolbar' => NULL, 'regions' => []],
-    ],
-    'neo_toolbar_region' => [
-      'variables' => ['region' => NULL, 'items' => []],
-    ],
-    'neo_toolbar_item' => [
-      'variables' => [
-        'attributes' => [],
-        'alignment' => NULL,
-        'style' => 'default',
-        'elements' => [],
-      ],
-    ],
-    'neo_toolbar_item_account_modal' => [
-      'variables' => [
-        'image' => NULL,
-        'name' => NULL,
-        'mail' => NULL,
-      ],
-    ],
-    'neo_toolbar_modal' => [
-      'variables' => [
-        'content' => [],
-        'title' => NULL,
-        'title_attributes' => [],
-      ],
-    ],
-    'neo_toolbar_element' => [
-      'variables' => [
-        'id' => NULL,
-        'tag' => NULL,
-        'alignment' => NULL,
-        'style' => 'default',
-        'title' => NULL,
-        'icon' => NULL,
-        'image' => NULL,
-        'image_size' => NULL,
-        'badge' => NULL,
-        'url' => NULL,
-        'attributes' => NULL,
-        'title_attributes' => NULL,
-        'icon_attributes' => NULL,
-        'image_attributes' => NULL,
-        'badge_attributes' => NULL,
-        'children' => NULL,
-        'after' => NULL,
-        'before' => NULL,
-      ],
-    ],
-    'neo_toolbar_element__divider' => [
-      'base hook' => 'neo_toolbar_element',
-    ],
-    'neo_toolbar_element__grid' => [
-      'base hook' => 'neo_toolbar_element',
-    ],
-  ];
-}
-
-/**
- * Implements hook_theme_suggestions_HOOK().
- */
-function neo_toolbar_theme_suggestions_neo_toolbar_region(array $variables) {
-  $suggestions = [];
-  /** @var \Drupal\neo_toolbar\ToolbarRegionPluginInterface $region */
-  $region = $variables['region'];
-  $suggestions[] = 'neo_toolbar_region__' . $region->getAlignment();
-  return $suggestions;
-}
-
-/**
- * Implements hook_theme_suggestions_HOOK().
- */
-function neo_toolbar_theme_suggestions_neo_toolbar_item(array $variables) {
-  $suggestions = [];
-  $suggestions[] = 'neo_toolbar_item__' . $variables['alignment'];
-  return $suggestions;
-}
-
-/**
- * Implements hook_theme_suggestions_HOOK().
- */
-function neo_toolbar_theme_suggestions_neo_toolbar_element(array $variables) {
-  $suggestions = [];
-  $suggestions[] = 'neo_toolbar_element__' . $variables['style'];
-  $suggestions[] = 'neo_toolbar_element__' . $variables['id'];
-  $suggestions[] = 'neo_toolbar_element__' . $variables['id'] . '__' . $variables['alignment'];
-  return $suggestions;
-}
-
-/**
- * Prepares variables for neo-toolbar-region.html.twig template.
- *
- * Default template: neo-toolbar-region.html.twig.
- *
- * @param array $variables
- *   An associative array.
- */
-function template_preprocess_neo_toolbar_region(array &$variables): void {
-  $variables['alignment'] = $variables['region']->getAlignment();
-  $variables['position'] = $variables['region']->getPosition();
-}
-
-/**
- * Prepares variables for neo-toolbar-modal.html.twig template.
- *
- * Default template: neo-toolbar-modal.html.twig.
- *
- * @param array $variables
- *   An associative array.
- */
-function template_preprocess_neo_toolbar_modal(array &$variables): void {
-  $variables['title_attributes'] = new Attribute($variables['title_attributes'] ?? []);
-  // $variables['attributes']['class'][] = 'neo-toolbar--modal';
 }
