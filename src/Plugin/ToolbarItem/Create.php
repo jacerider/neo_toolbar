@@ -26,7 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 #[ToolbarItem(
   id: 'create',
   label: new TranslatableMarkup('Create'),
-  description: new TranslatableMarkup('Links to create content, taxonomy terms, and media.'),
+  description: new TranslatableMarkup('Links to create content, products, taxonomy terms, and media.'),
 )]
 class Create extends ToolbarItemPluginBase {
   use ToolbarItemLinkTrait;
@@ -75,6 +75,9 @@ class Create extends ToolbarItemPluginBase {
       'node_enabled' => TRUE,
       'node_bundles' => [],
       'node_exclude' => FALSE,
+      'commerce_product_enabled' => FALSE,
+      'commerce_product_bundles' => [],
+      'commerce_product_exclude' => FALSE,
       'taxonomy_enabled' => FALSE,
       'taxonomy_bundles' => [],
       'taxonomy_exclude' => FALSE,
@@ -152,6 +155,49 @@ class Create extends ToolbarItemPluginBase {
         '#states' => [
           'visible' => [
             ':input[name="settings[node][node_enabled]"]' => ['checked' => TRUE],
+          ],
+        ],
+      ];
+    }
+
+    // Commerce product types.
+    if ($this->entityTypeManager->hasDefinition('commerce_product_type')) {
+      $form['commerce_product'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Products'),
+        '#group' => 'settings][entity_types',
+      ];
+      $form['commerce_product']['commerce_product_enabled'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Enable products'),
+        '#default_value' => $this->configuration['commerce_product_enabled'],
+      ];
+      $product_types = $this->entityTypeManager->getStorage('commerce_product_type')->loadMultiple();
+      $product_options = [];
+      foreach ($product_types as $type) {
+        $product_options[$type->id()] = $type->label();
+      }
+      asort($product_options);
+      $form['commerce_product']['commerce_product_bundles'] = [
+        '#type' => 'checkboxes',
+        '#title' => $this->t('Product types'),
+        '#description' => $this->t('Select which product types to include. Leave empty to include all.'),
+        '#options' => $product_options,
+        '#default_value' => $this->configuration['commerce_product_bundles'],
+        '#states' => [
+          'visible' => [
+            ':input[name="settings[commerce_product][commerce_product_enabled]"]' => ['checked' => TRUE],
+          ],
+        ],
+      ];
+      $form['commerce_product']['commerce_product_exclude'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Exclude selected product types'),
+        '#description' => $this->t('If checked, the selected product types will be excluded instead of included.'),
+        '#default_value' => $this->configuration['commerce_product_exclude'],
+        '#states' => [
+          'visible' => [
+            ':input[name="settings[commerce_product][commerce_product_enabled]"]' => ['checked' => TRUE],
           ],
         ],
       ];
@@ -256,6 +302,10 @@ class Create extends ToolbarItemPluginBase {
     $values['node_enabled'] = (bool) ($node['node_enabled'] ?? FALSE);
     $values['node_bundles'] = array_filter($node['node_bundles'] ?? []);
     $values['node_exclude'] = (bool) ($node['node_exclude'] ?? FALSE);
+    $product = $form_state->getValue('commerce_product', []);
+    $values['commerce_product_enabled'] = (bool) ($product['commerce_product_enabled'] ?? FALSE);
+    $values['commerce_product_bundles'] = array_filter($product['commerce_product_bundles'] ?? []);
+    $values['commerce_product_exclude'] = (bool) ($product['commerce_product_exclude'] ?? FALSE);
     $media = $form_state->getValue('media', []);
     $values['media_enabled'] = (bool) ($media['media_enabled'] ?? FALSE);
     $values['media_bundles'] = array_filter($media['media_bundles'] ?? []);
@@ -282,6 +332,14 @@ class Create extends ToolbarItemPluginBase {
     if (!empty($this->configuration['node_enabled']) && $this->entityTypeManager->hasDefinition('node_type')) {
       foreach ($this->getFilteredBundles('node_type', 'node_bundles', 'node_exclude') as $type) {
         if (Url::fromRoute('node.add', ['node_type' => $type->id()])->access($account)) {
+          return AccessResult::allowed();
+        }
+      }
+    }
+    if (!empty($this->configuration['commerce_product_enabled']) && $this->entityTypeManager->hasDefinition('commerce_product_type')) {
+      foreach ($this->getFilteredBundles('commerce_product_type', 'commerce_product_bundles', 'commerce_product_exclude') as $type) {
+        $url = Url::fromRoute('entity.commerce_product.add_form', ['commerce_product_type' => $type->id()]);
+        if ($url->access($account)) {
           return AccessResult::allowed();
         }
       }
@@ -313,6 +371,7 @@ class Create extends ToolbarItemPluginBase {
 
     $collection = new ToolbarItemCollection($element->getAlignment(), 'grid');
     $this->buildNodeElements($collection);
+    $this->buildCommerceProductElements($collection);
     $this->buildMediaElements($collection);
     $this->buildTaxonomyElements($collection);
     $this->processSchemeElement($element);
@@ -355,6 +414,40 @@ class Create extends ToolbarItemPluginBase {
     }
     if (!empty($elements)) {
       $itemElement = new ToolbarItemElement('node', 'Content', 'horizontal');
+      $itemElement->setStyle('heading', TRUE);
+      $itemElement->addClass('col-span-2');
+      $collection->add($itemElement);
+      foreach ($elements as $element) {
+        $collection->add($element);
+      }
+    }
+  }
+
+  /**
+   * Build commerce product creation elements.
+   */
+  protected function buildCommerceProductElements(ToolbarItemCollection $collection): void {
+    if (empty($this->configuration['commerce_product_enabled']) || !$this->entityTypeManager->hasDefinition('commerce_product_type')) {
+      return;
+    }
+    $elements = [];
+    foreach ($this->getFilteredBundles('commerce_product_type', 'commerce_product_bundles', 'commerce_product_exclude') as $type) {
+      $url = Url::fromRoute('entity.commerce_product.add_form', ['commerce_product_type' => $type->id()]);
+      if (!$url->access()) {
+        continue;
+      }
+      $itemElement = new ToolbarItemElement('commerce_product_' . $type->id(), $type->label(), 'horizontal');
+      $this->linkProcessElement($itemElement, $url);
+      if ($icon = $this->loadIcon($type->label(), NULL, NULL, [
+        'entity',
+        'entity.commerce_product',
+      ])) {
+        $itemElement->setIcon($icon->getName());
+      }
+      $elements[] = $itemElement;
+    }
+    if (!empty($elements)) {
+      $itemElement = new ToolbarItemElement('commerce_product', 'Products', 'horizontal');
       $itemElement->setStyle('heading', TRUE);
       $itemElement->addClass('col-span-2');
       $collection->add($itemElement);

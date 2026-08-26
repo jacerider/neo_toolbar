@@ -145,6 +145,18 @@ neo_toolbar_item.settings.create:
     node_exclude:
       type: boolean
       label: 'Exclude selected content types'
+    commerce_product_enabled:
+      type: boolean
+      label: 'Enable products'
+    commerce_product_bundles:
+      type: sequence
+      label: 'Product types'
+      sequence:
+        type: string
+        label: 'Product type'
+    commerce_product_exclude:
+      type: boolean
+      label: 'Exclude selected product types'
     taxonomy_enabled:
       type: boolean
       label: 'Enable taxonomy'
