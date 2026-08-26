@@ -6,3 +6,4 @@ toolbar:
   dependencies:
     - core/drupal
     - core/drupal.displace
+    - core/once
