@@ -2,7 +2,6 @@
 
 namespace Drupal\neo_toolbar;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\user\Entity\User;
 
@@ -21,42 +20,23 @@ trait ToolbarItemTokenTrait {
   /**
    * Get the token element.
    *
+   * A link that opens the token browser on demand, rather than the tree
+   * itself: built inline, the tree is over a thousand table rows shipped into
+   * every form that carries this element, for a panel most people never open.
+   *
+   * Note this is a theme hook, not a render element -- there is no
+   * token_tree_link element plugin, so '#type' would not resolve.
+   *
    * @return array
    *   The token element.
    */
   protected function getTokenElement() {
     return [
-      '#type' => 'details',
-      '#title' => $this->t('Available tokens'),
-      '#open' => FALSE,
-      'tokens' => \Drupal::service('token.tree_builder')->buildRenderable(['user']) + [
-        '#attributes' => [
-          'class' => ['m-0'],
-        ],
-      ],
-      '#element_validate' => [
-        [static::class, 'tokenValidate'],
-      ],
+      // Global token types come along by default, matching what this trait's
+      // tokenReplace() can actually resolve.
+      '#theme' => 'token_tree_link',
+      '#token_types' => ['user'],
     ];
-  }
-
-  /**
-   * Validate the token element.
-   *
-   * Removes the token element from the form state values to prevent it
-   * from being saved as part of the configuration.
-   *
-   * @param array $element
-   *   The token element.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state.
-   */
-  public static function tokenValidate(array $element, FormStateInterface $form_state) {
-    $parents = $element['#parents'];
-    array_pop($parents);
-    $values = $form_state->getValue($parents);
-    unset($values['token']);
-    $form_state->setValue($parents, $values);
   }
 
   /**
