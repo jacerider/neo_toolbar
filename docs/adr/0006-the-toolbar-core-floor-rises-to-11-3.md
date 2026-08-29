@@ -2,7 +2,7 @@
 
 **Status:** accepted · **Date:** 2026-08-25
 **Context:** `neo_toolbar` — the **core floor** and the **hook classes** its hooks move into
-**Issue:** jacerider/neo_toolbar#8  ·  **Plan:** `neo-toolbar-hook-classes` on wps
+**Issue:** jacerider/neo_toolbar#8
 
 **Decision.** `neo_toolbar` declares `core_version_requirement: ^10.3 || ^11` (its composer
 metadata agrees); both narrow to `^11.3`. Its six hooks move into **hook classes**, page-top

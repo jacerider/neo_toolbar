@@ -2,7 +2,7 @@
 
 **Status:** accepted · **Date:** 2026-08-24
 **Context:** `neo_toolbar` — the **item pipeline**, **pipeline rules** and **toolbar repository**
-**Issue:** jacerider/neo_toolbar#4  ·  **Plan:** `neo-toolbar-item-pipeline` on wps
+**Issue:** jacerider/neo_toolbar#4
 
 **Decision.** The **item pipeline** moves from `Toolbar::getItems()` to the **toolbar repository**
 as five methods, four of them public — the access filter, **region collapse**, **sibling access**
