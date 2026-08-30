@@ -8,7 +8,7 @@
 as five methods, four of them public — the access filter, **region collapse**, **sibling access**
 and the **triggering item** restore — each taking an array of **toolbar items** and returning the
 ones that survive it; only their shared region grouping stays private. `ToolbarRepository` is
-`final` with no interface, so each public rule is a permanent promise to roughly thirty sites. That
+`final` with no interface, so each public rule is a permanent promise to every installing site. That
 is deliberate: a **pipeline rule** is public *because* it is callable on its own, and a fifth rule
 joins as a fifth public method plus one line in `getToolbarItems()`, arriving testable.
 
@@ -26,7 +26,7 @@ access-gate plan deferred, leaving only `getActive()`'s toolbar-level check and 
 **Rejected.**
 - Private rules behind `getToolbarItems()` — cheaper, idiomatic, not what the extraction is for.
 - A separate `ToolbarItemPipeline` service — splits "which toolbar" from "which of its items", two
-  things that always travel together, and adds a service id thirty sites must learn; the repository
+  things that always travel together, and adds a service id every site must learn; the repository
   already calls the pipeline from `getToolbarItemsOfType()` and is where a reader looks first.
 - An interface on the repository — a bigger promise than justified: nobody substitutes an
   implementation and the kernel tests construct the real class. Stays open as a later additive step.
