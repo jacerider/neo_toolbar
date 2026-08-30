@@ -33,7 +33,7 @@ use PHPUnit\Framework\Attributes\Group;
  * The icon is asserted to be the **last** constructor parameter, after the
  * provider. Grouping it with the label and the region-creation flag would read
  * better and would shift four existing parameters one place right; the
- * attribute is public API across roughly thirty sites, where a positional
+ * attribute is public API across every installing site, where a positional
  * declaration would then fail with a type error at plugin discovery. The
  * position is therefore load-bearing and is pinned rather than assumed.
  *

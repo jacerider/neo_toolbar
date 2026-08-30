@@ -98,8 +98,8 @@ final class ToolbarAccessGate {
     // as whatever the database driver put in the row: a driver setting
     // \PDO::ATTR_STRINGIFY_FETCHES answers the string '1' and one returning
     // native types answers the integer 1. Comparing against either literal
-    // alone would make one of those two sites behave differently from the other
-    // for no reason a reader could find.
+    // alone would make a site on one driver behave differently from a site on
+    // the other for no reason a reader could find.
     //
     // The same permission short-circuit means user 1 is never denied above and
     // so never reaches the masquerade branch below: user 1 always sees the Neo

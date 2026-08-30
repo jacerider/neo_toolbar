@@ -696,7 +696,7 @@ final class ToolbarAccessGateTest extends KernelTestBase {
    * The forwarder is the service's answer and nothing of its own.
    *
    * `neo_toolbar_toolbar_view_access()` survives the move undeprecated,
-   * because it is a global function in a file thirty sites load and any of
+   * because it is a global function in a file every site loads and any of
    * them can call it from custom code. What it must not do is answer anything
    * of its own: every permutation below is asked twice, once through the
    * function and once of `neo_toolbar.access_gate` directly, and the two are
