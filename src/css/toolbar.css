@@ -52,14 +52,27 @@
   }
 }
 
-/* The active pill in a group (local tasks, actions) reads as raised off its
-   track: a lit top edge and a short contact shadow, as a filled button has in
-   the admin. */
+/* The active pill in a group (local tasks, actions) takes the primary
+   button's colours, which neo_color picks per scheme for contrast. The
+   palette pair it used before, `primary-500` with `primary-500-content`,
+   follows a palette's hand-set shade flags instead: on a site whose primary
+   500 is a light gold flagged for light text, that was near-white on gold at
+   2.17:1.
+
+   It also reads as raised off its track: a lit top edge and a short contact
+   shadow, as a filled button has in the admin. */
 .neo-toolbar--element--pill.is-active {
+  background-color: var(--btn-primary-bg-color, rgb(var(--color-primary-500)));
+  color: var(--btn-primary-content-color, rgb(var(--color-primary-500-content)));
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.18),
     0 1px 2px rgb(var(--color-shadow-700) / 0.3),
     0 2px 6px -2px rgb(var(--color-shadow-700) / 0.25);
+
+  &:hover {
+    background-color: var(--btn-primary-bg-color-hover, rgb(var(--color-primary-600)));
+    color: var(--btn-primary-content-color-hover, rgb(var(--color-primary-600-content)));
+  }
 }
 
 /* A tile in the Create panel lifts towards the pointer instead of scaling,
