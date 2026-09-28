@@ -13,7 +13,8 @@
 #}
 {%
   set classes = [
-    'flex flex-col items-center gap-2 border-2 rounded p-2 text-default hover:bg-base-100 hover:border-primary-500 hover:scale-105 transition leading-none',
+    'flex flex-col items-center gap-2 border border-base-200 rounded-lg p-2 bg-base-50 text-default hover:bg-base-0 hover:border-primary/50 transition leading-none',
+    'focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2',
   ]
 %}
 {%
@@ -33,7 +34,7 @@
 %}
 {%
   set icon_classes = [
-    'text-default text-3xl',
+    'text-primary text-3xl',
   ]
 %}
 {%
@@ -41,7 +42,7 @@
   ]
 %}
 {{ before }}
-<{{ tag }}{{ attributes.addClass('neo-toolbar--element relative', classes) }}>
+<{{ tag }}{{ attributes.addClass('neo-toolbar--element neo-toolbar--element--grid', 'relative', classes) }}>
   {% if badge %}
     <div{{ badge_attributes.addClass(badge_classes) }}>{{ badge }}</div>
   {% endif %}

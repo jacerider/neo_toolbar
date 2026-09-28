@@ -858,6 +858,15 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
     $modal->setHeaderColorBg('rgb(var(--color-base-0))');
     $modal->setContentColor('rgb(var(--color-base-950))');
     $modal->setContentColorBg('rgb(var(--color-base-0))');
+    // The page behind blurs under a light brand-tinted veil rather than going
+    // near-black, so it stays in view as context. The toolbar renders outside
+    // the blurred wrapper, so the frame the panel opened from stays sharp.
+    $modal->setBodyTransitionBlur(TRUE);
+    $modal->setBackdropColorBg('rgb(var(--color-shadow-900) / 0.3)');
+    // An edge for the panel against the blurred page, which the close button
+    // outside it shares; rounded away from the panel, it reads as a tab.
+    $modal->setShadow('1px 0 0 rgb(var(--color-shadow-500) / 0.12), 12px 0 32px -12px rgb(var(--color-shadow-700) / 0.35)');
+    $modal->setHeaderOutRadius('0 0.75rem 0.75rem 0');
     $this->modal = $modal;
     return $this;
   }

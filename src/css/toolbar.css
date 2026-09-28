@@ -1,0 +1,71 @@
+/* ---------------------------------------------------------------------------
+   Toolbar states the utility classes in the templates cannot draw.
+
+   The toolbar renders on the front theme and the admin theme alike, so every
+   value here comes from neo_color, which both builds carry: the base, primary
+   and brand-tinted shadow ramps. Nothing an admin theme defines for itself.
+   --------------------------------------------------------------------------- */
+
+/* The section you are in: a bar on the frame's outer edge beside an active
+   rail item, or beneath an active top-bar item. It is drawn outside the item,
+   in the space the region leaves around it, so the item lifts its own clip
+   while it is active. The offsets are that space plus the item's 2px border:
+   the rail is 40px (64px from md) around a 32px (48px) item, and the top bar
+   40px (56px) around a 28px (40px) one.
+
+   An image item (the site's favicon, active on the home page) is left out: it
+   relies on its clip to round the image, and it marks no section. */
+.neo-toolbar--element--default.is-active:not(:has(img)) {
+  overflow: visible;
+
+  &::after {
+    content: '';
+    position: absolute;
+    background: rgb(var(--color-primary));
+    pointer-events: none;
+  }
+}
+
+.neo-toolbar--side .neo-toolbar--element--default.is-active:not(:has(img))::after {
+  top: 25%;
+  bottom: 25%;
+  left: -6px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+}
+
+.neo-toolbar--top .neo-toolbar--element--default.is-active:not(:has(img))::after {
+  right: 25%;
+  bottom: -8px;
+  left: 25%;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+}
+
+@media (min-width: 48rem) {
+  .neo-toolbar--side .neo-toolbar--element--default.is-active:not(:has(img))::after {
+    left: -10px;
+  }
+
+  .neo-toolbar--top .neo-toolbar--element--default.is-active:not(:has(img))::after {
+    bottom: -10px;
+  }
+}
+
+/* The active pill in a group (local tasks, actions) reads as raised off its
+   track: a lit top edge and a short contact shadow, as a filled button has in
+   the admin. */
+.neo-toolbar--element--pill.is-active {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    0 1px 2px rgb(var(--color-shadow-700) / 0.3),
+    0 2px 6px -2px rgb(var(--color-shadow-700) / 0.25);
+}
+
+/* A tile in the Create panel lifts towards the pointer instead of scaling,
+   which moved its neighbours' edges and blurred its label mid-transition. */
+.neo-toolbar--element--grid:hover {
+  box-shadow:
+    0 1px 2px -1px rgb(var(--color-shadow-500) / 0.14),
+    0 6px 14px -6px rgb(var(--color-shadow-500) / 0.25);
+}

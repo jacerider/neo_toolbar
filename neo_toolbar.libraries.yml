@@ -1,6 +1,9 @@
 toolbar:
   version: VERSION
   neo: true
+  css:
+    theme:
+      src/css/toolbar.css: {}
   js:
     src/js/toolbar.ts: {}
   dependencies:
