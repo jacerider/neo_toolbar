@@ -281,6 +281,29 @@ final class BehaviouralHooksTest extends KernelTestBase {
   }
 
   /**
+   * The local tasks alter orders an entity's View, Edit and Delete tabs.
+   *
+   * Covers: it moves Edit ahead of a default-weight tab and Delete past the
+   * heaviest one, through the hook system. `EntityTaskOrderTest` pins the
+   * rule itself; this pins that the alter applies it.
+   */
+  public function testOrdersEntityTabsThroughTheLocalTasksAlter(): void {
+    $base = 'entity.node.canonical';
+    $definitions = [
+      'view' => ['route_name' => $base, 'base_route' => $base],
+      'extra' => ['route_name' => 'node.extra', 'base_route' => $base, 'weight' => 0],
+      'edit' => ['route_name' => 'entity.node.edit_form', 'base_route' => $base, 'weight' => 0],
+      'delete' => ['route_name' => 'entity.node.delete_form', 'base_route' => $base, 'weight' => 10],
+      'devel' => ['route_name' => 'node.devel', 'base_route' => $base, 'weight' => 100],
+    ];
+
+    $this->container->get('module_handler')->alter('local_tasks', $definitions);
+
+    $this->assertLessThan($definitions['extra']['weight'], $definitions['edit']['weight']);
+    $this->assertGreaterThan($definitions['devel']['weight'], $definitions['delete']['weight']);
+  }
+
+  /**
    * Invokes hook_page_top() the way core's HTML renderer invokes it.
    *
    * @return array

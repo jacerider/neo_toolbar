@@ -10,6 +10,7 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Hook\Order\Order;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\neo_toolbar\EntityTaskOrder;
 use Drupal\neo_toolbar\ToolbarAccessGate;
 use Drupal\neo_toolbar\ToolbarRepository;
 
@@ -24,7 +25,8 @@ use Drupal\neo_toolbar\ToolbarRepository;
  * substitution — the three `\Drupal::service()` calls became the two
  * constructor arguments. Nothing about what any of them decides moved with
  * them: not which blocks are hidden, not which local task is re-parented, not
- * what the page-top element carries.
+ * what the page-top element carries. The local tasks alter has since taken on
+ * one decision of its own, the entity tab order in `EntityTaskOrder`.
  *
  * This is not an API and it is not `final`. The methods are public because
  * core's hook collector only reads public methods, and nothing but the hook
@@ -87,13 +89,18 @@ class NeoToolbarHooks {
 
   /**
    * Implements hook_local_tasks_alter().
+   *
+   * Runs last so the entity tab order is decided against every tab a set ends
+   * up with, including the ones whose base route another alter fills in, the
+   * way Views does for its own tabs.
    */
-  #[Hook('local_tasks_alter')]
+  #[Hook('local_tasks_alter', order: Order::Last)]
   public function localTasksAlter(&$definitions): void {
     if (isset($definitions['entity.media.collection'])) {
       // Move media collection to its own tab.
       $definitions['entity.media.collection']['base_route'] = 'entity.media.collection';
     }
+    EntityTaskOrder::apply($definitions);
   }
 
   /**
