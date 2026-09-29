@@ -854,6 +854,12 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
     $modal->setContentAnimateOut('slideOutLeft');
     $modal->setContentPadding('0px');
     $modal->setContentScroll(TRUE);
+    // The panel is part of the toolbar, so it takes the page's own scheme, as
+    // the rail it opens from does, rather than the site's default for modals.
+    // The colours below resolve on the modal, and its content is reset to the
+    // page's scheme either way: a site whose modal scheme differs had a
+    // panel in one scheme around a title and tiles drawn in the other.
+    $modal->setColorScheme('scheme--reset');
     $modal->setHeaderColor('rgb(var(--color-base-950))');
     $modal->setHeaderColorBg('rgb(var(--color-base-0))');
     $modal->setContentColor('rgb(var(--color-base-950))');
