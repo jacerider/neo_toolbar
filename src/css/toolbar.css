@@ -6,6 +6,13 @@
    and brand-tinted shadow ramps. Nothing an admin theme defines for itself.
    --------------------------------------------------------------------------- */
 
+/* An item that only opens a panel renders as a button, which browsers draw
+   with the default arrow. It is as clickable as the linked items beside it,
+   so it takes the same hand. */
+button.neo-toolbar--element {
+  cursor: pointer;
+}
+
 /* The section you are in: a bar on the frame's outer edge beside an active
    rail item, or beneath an active top-bar item. It is drawn outside the item,
    in the space the region leaves around it, so the item lifts its own clip

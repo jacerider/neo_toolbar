@@ -44,11 +44,14 @@ final class ToolbarItemElementModalTest extends KernelTestBase {
    * keep to, and the spec names this as one of the two tests expected to go
    * wider: `neo_modal` and its `neo_settings` repository have to be installed
    * for the modal to be constructible at all, and `neo` and `neo_tooltip` are
-   * `neo_modal`'s own container dependencies.
+   * `neo_modal`'s own container dependencies. `path_alias` and `linkit` are
+   * `neo`'s: its `neo.linkit_resolver` service takes both.
    */
   protected static $modules = [
     'system',
     'user',
+    'path_alias',
+    'linkit',
     'neo',
     'neo_settings',
     'neo_tooltip',
@@ -108,10 +111,12 @@ final class ToolbarItemElementModalTest extends KernelTestBase {
     $this->assertSame(['neo-toolbar-item', 'use-neo-modal'], $attributes['class']);
     // Everything the modal asked for arrived, and nothing else did. Compared
     // without the class, which is the one key the merge has two sources for.
+    // `type` is not the modal's either: it comes with the button the element
+    // becomes, covered by its own test below.
     $trigger = $modal->getTriggerAttributes()->toArray();
     unset($trigger['class']);
     $merged = $attributes;
-    unset($merged['class']);
+    unset($merged['class'], $merged['type']);
     $this->assertSame(
       $trigger,
       $merged,
@@ -154,6 +159,36 @@ final class ToolbarItemElementModalTest extends KernelTestBase {
         $this->assertContains($attachment, $build['#attached'][$type]);
       }
     }
+  }
+
+  /**
+   * An item that only opens a panel renders as a button.
+   *
+   * With no URL nothing makes it a link, so it would stay the default span:
+   * clickable through neo_modal's class binding, but with no pointer, no Tab
+   * stop and no role.
+   */
+  public function testAModalOnlyItemRendersAsAButton(): void {
+    $element = $this->element();
+    $element->setModal('Panel content', 'Panel title');
+
+    $build = $element->toRenderable();
+    $this->assertSame('button', $build['#tag']);
+    $this->assertSame('button', $build['#attributes']->toArray()['type']);
+  }
+
+  /**
+   * An item that is already a link keeps its tag when it also opens a panel.
+   */
+  public function testALinkedModalItemStaysALink(): void {
+    $element = $this->element();
+    $element->setTag('a');
+    $element->setAttribute('href', '/user/1');
+    $element->setModal('Panel content', 'Panel title');
+
+    $build = $element->toRenderable();
+    $this->assertSame('a', $build['#tag']);
+    $this->assertArrayNotHasKey('type', $build['#attributes']->toArray());
   }
 
   /**

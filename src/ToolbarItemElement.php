@@ -947,6 +947,14 @@ class ToolbarItemElement implements RefinableCacheableDependencyInterface {
     }
     if ($modal = $this->getModal()) {
       $this->mergeAttributes($modal->getTriggerAttributes());
+      // An item that only opens a panel has no URL, so nothing made it a link
+      // and it is still the default span. neo_modal binds by class, so a span
+      // opens the panel on click — but it shows no pointer, cannot be reached
+      // with Tab and is not announced as a control. A button is all three.
+      if ($build['#tag'] === 'span') {
+        $build['#tag'] = 'button';
+        $this->setAttribute('type', 'button');
+      }
       $build['#after']['modal'] = $modal->buildContent();
       foreach ($modal->getAttachments() as $type => $attachments) {
         foreach ($attachments as $attachment) {
